@@ -1,4 +1,5 @@
 import streamlit as st
+import requests
 
 st.set_page_config(
     page_title="AYANT Content AI",
@@ -57,13 +58,107 @@ character = st.text_area(
     height=120
 )
 
+
+# =========================================================
+# OPENROUTER AI STORY GENERATOR
+# =========================================================
+
+def generate_ai_story(idea, duration, style, character):
+
+    api_key = st.secrets.get("OPENROUTER_API_KEY")
+
+    if not api_key:
+        return None, "OPENROUTER_API_KEY नहीं मिला। Streamlit Secrets check करो।"
+
+    prompt = f"""
+तुम AYANT Content AI के professional Hindi story writer हो।
+
+यूज़र का वीडियो आइडिया:
+{idea}
+
+वीडियो duration:
+{duration}
+
+Visual style:
+{style}
+
+Character Lock:
+{character}
+
+इस idea पर एक engaging Hindi short-video story लिखो।
+
+Rules:
+- कहानी पूरी तरह हिंदी में हो।
+- शुरुआत में strong hook हो।
+- कहानी cinematic और visual हो।
+- कहानी में suspense, emotion और curiosity हो जहाँ suitable हो।
+- Main character की personality और appearance Character Lock के अनुसार रखो।
+- कहानी duration के हिसाब से concise रखो।
+- अनावश्यक explanation मत दो।
+- केवल final story दो।
+- Scene numbers मत दो।
+- Image prompts मत दो।
+- Image-to-video prompts मत दो।
+- कहानी ऐसी हो जिसे बाद में अलग-अलग scenes में आसानी से तोड़ा जा सके।
+"""
+
+    try:
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "openrouter/free",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                "temperature": 0.8,
+            },
+            timeout=120
+        )
+
+        if response.status_code != 200:
+            try:
+                error_data = response.json()
+                error_message = error_data.get("error", {}).get(
+                    "message",
+                    response.text
+                )
+            except Exception:
+                error_message = response.text
+
+            return None, f"OpenRouter Error: {error_message}"
+
+        data = response.json()
+
+        story = data["choices"][0]["message"]["content"]
+
+        return story.strip(), None
+
+    except requests.exceptions.Timeout:
+        return None, "AI response में बहुत समय लग रहा है। थोड़ी देर बाद फिर try करो।"
+
+    except Exception as e:
+        return None, f"Connection Error: {str(e)}"
+
+
+# =========================================================
+# MAIN WORKFLOW
+# =========================================================
+
 if st.button("🚀 STORY WORKFLOW START", type="primary"):
 
     if not idea.strip():
         st.warning("पहले अपनी story या video idea लिखो।")
+
     else:
 
-        st.success("Content workflow तैयार है!")
+        st.success("Content workflow शुरू हो गया!")
 
         st.markdown("## 🎬 VIDEO PLAN")
 
@@ -71,19 +166,44 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
         st.write(f"**Style:** {style}")
         st.write(f"**Format:** {aspect_ratio}")
 
-        st.markdown("## 📖 STORY IDEA")
-        st.write(idea)
+        # =================================================
+        # AI STORY GENERATION
+        # =================================================
 
-        st.markdown("## 🔒 CHARACTER LOCK")
-        st.code(character)
+        with st.spinner("🤖 AI तुम्हारी कहानी लिख रहा है..."):
 
-        st.markdown("## 🎨 IMAGE GENERATION MASTER PROMPT")
+            generated_story, error = generate_ai_story(
+                idea,
+                duration,
+                style,
+                character
+            )
 
-        image_prompt = f"""
+        if error:
+
+            st.error(error)
+
+        else:
+
+            st.markdown("## 📖 AI GENERATED STORY")
+
+            st.write(generated_story)
+
+            st.markdown("## 🔒 CHARACTER LOCK")
+
+            st.code(character)
+
+            # =================================================
+            # IMAGE GENERATION MASTER PROMPT
+            # =================================================
+
+            st.markdown("## 🎨 IMAGE GENERATION MASTER PROMPT")
+
+            image_prompt = f"""
 Create a cinematic {style} scene for a {aspect_ratio} video.
 
 Story:
-{idea}
+{generated_story}
 
 Character continuity:
 {character}
@@ -100,15 +220,19 @@ Important:
 - Consistent character design.
 """
 
-        st.code(image_prompt, language="text")
+            st.code(image_prompt, language="text")
 
-        st.markdown("## 🎥 IMAGE-TO-VIDEO MASTER PROMPT")
+            # =================================================
+            # IMAGE TO VIDEO MASTER PROMPT
+            # =================================================
 
-        video_prompt = f"""
+            st.markdown("## 🎥 IMAGE-TO-VIDEO MASTER PROMPT")
+
+            video_prompt = f"""
 Animate this image into a cinematic video.
 
 Story context:
-{idea}
+{generated_story}
 
 Character continuity:
 {character}
@@ -126,10 +250,11 @@ Animation instructions:
 - Keep the original composition consistent.
 """
 
-        st.code(video_prompt, language="text")
+            st.code(video_prompt, language="text")
 
-        st.info(
-            "यह पहला base version है। अगले modules में AI story writing, "
-            "automatic scene breakdown, अलग-अलग scene prompts, "
-            "character locking और Google Flow workflow जोड़ा जाएगा."
-        )
+            st.info(
+                "AI Story Generation module successfully connected. "
+                "अगले module में इसी generated story को automatic scenes "
+                "में break करके हर scene के अलग image prompts और "
+                "image-to-video prompts बनाए जा सकते हैं."
+            )
