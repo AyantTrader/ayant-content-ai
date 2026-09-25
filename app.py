@@ -1,7 +1,12 @@
 import streamlit as st
 import requests
-import json
 import re
+import html
+
+
+# =========================================================
+# PAGE CONFIG
+# =========================================================
 
 st.set_page_config(
     page_title="AYANT Content AI",
@@ -9,13 +14,51 @@ st.set_page_config(
     layout="wide"
 )
 
+
+# =========================================================
+# HINDI UI FONT
+# =========================================================
+
+st.markdown(
+    """
+    <style>
+    .hindi-story,
+    .hindi-story * {
+        font-family: "Noto Sans Devanagari",
+                     "Nirmala UI",
+                     "Mangal",
+                     sans-serif !important;
+        line-height: 1.8 !important;
+    }
+
+    .hindi-story {
+        font-size: 18px;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# =========================================================
+# APP HEADER
+# =========================================================
+
 st.title("🎬 AYANT Content AI")
+
 st.caption(
-    "Story → Continuity Lock → Scenes → Image Prompts → "
-    "Image-to-Video Prompts → Google Flow"
+    "Story → Continuity Lock → Scenes → Start/End Frames → "
+    "Image Prompts → Image-to-Video Prompts → Google Flow"
 )
 
 st.divider()
+
+
+# =========================================================
+# VIDEO INPUT
+# =========================================================
 
 st.subheader("📝 अपनी कहानी या वीडियो आइडिया लिखो")
 
@@ -25,15 +68,28 @@ idea = st.text_area(
     height=180
 )
 
+
+# =========================================================
+# VIDEO SETTINGS
+# =========================================================
+
 col1, col2, col3 = st.columns(3)
 
 with col1:
+
     duration = st.selectbox(
         "वीडियो duration",
-        ["30 सेकंड", "60 सेकंड", "90 सेकंड", "2 मिनट"]
+        [
+            "30 सेकंड",
+            "60 सेकंड",
+            "90 सेकंड",
+            "2 मिनट"
+        ]
     )
 
+
 with col2:
+
     style = st.selectbox(
         "Visual Style",
         [
@@ -44,11 +100,55 @@ with col2:
         ]
     )
 
+
 with col3:
+
     aspect_ratio = st.selectbox(
         "Format",
-        ["9:16 Vertical", "16:9 Horizontal", "1:1 Square"]
+        [
+            "9:16 Vertical",
+            "16:9 Horizontal",
+            "1:1 Square"
+        ]
     )
+
+
+# =========================================================
+# EXACT CLIP / IMAGE COUNT
+# =========================================================
+
+DURATION_CONFIG = {
+
+    "30 सेकंड": {
+        "clips": 4,
+        "images": 8
+    },
+
+    "60 सेकंड": {
+        "clips": 8,
+        "images": 16
+    },
+
+    "90 सेकंड": {
+        "clips": 12,
+        "images": 24
+    },
+
+    "2 मिनट": {
+        "clips": 15,
+        "images": 30
+    }
+}
+
+
+expected_clips = DURATION_CONFIG[duration]["clips"]
+expected_images = DURATION_CONFIG[duration]["images"]
+
+
+st.info(
+    f"🎬 {duration} → {expected_clips} clips → "
+    f"{expected_images} images → हर clip exactly 8 seconds"
+)
 
 
 # =========================================================
@@ -56,17 +156,40 @@ with col3:
 # =========================================================
 
 FIXED_AYANT_CLOTHING = """
-Ayant's clothing is permanently locked and MUST NEVER CHANGE:
-black T-shirt with the word "AYANT" written clearly in white letters
-on the FRONT and also on the BACK, black pants, and clean white shoes.
+AYANT CLOTHING IS PERMANENTLY LOCKED.
 
-These clothing details must remain exactly identical in every scene.
-Do not change the shirt color, shirt design, text, pants color, shoes,
-or add/remove clothing or accessories.
+Ayant must always wear exactly:
 
-No clothing variation, no wardrobe change, no color change,
-no logo change, no text change, no outfit morphing.
+- black T-shirt
+- the word "AYANT" clearly written in white letters on the FRONT
+- the word "AYANT" clearly written in white letters on the BACK
+- black pants
+- clean white shoes
+
+These details MUST remain identical in every scene and every frame.
+
+Do NOT change:
+- shirt color
+- shirt design
+- shirt text
+- pants color
+- shoes
+- clothing style
+- wardrobe
+- accessories
+
+No wardrobe change.
+No clothing variation.
+No clothing morphing.
+No outfit redesign.
+No added clothing.
+No removed clothing.
 """
+
+
+# =========================================================
+# CHARACTER LOCK INPUT
+# =========================================================
 
 st.subheader("🔒 Character Lock")
 
@@ -75,15 +198,21 @@ character = st.text_area(
     value=(
         "Ayant: young Indian male, wheatish skin, brown eyes, "
         "short trimmed beard and moustache, black hair tied in a high "
-        "man-bun/top-knot, consistent face, body and appearance across "
-        "all scenes."
+        "man-bun/top-knot, consistent face, body proportions and "
+        "appearance across all scenes."
     ),
     height=120
 )
 
+
 st.info(
-    "🔒 Ayant Clothing Lock: Black T-shirt + white 'AYANT' text "
-    "front/back + black pants + white shoes | 🎥 Every clip: exactly 8 seconds"
+    "🔒 Character + Clothing Lock | "
+    "📍 Location Lock | "
+    "🧱 Object Lock | "
+    "🔄 Pose/Position Continuity | "
+    f"🎬 {expected_clips} clips | "
+    f"🖼️ {expected_images} images | "
+    "⏱️ Every clip exactly 8 seconds"
 )
 
 
@@ -96,46 +225,62 @@ def openrouter_request(prompt):
     api_key = st.secrets.get("OPENROUTER_API_KEY")
 
     if not api_key:
-        return None, "OPENROUTER_API_KEY नहीं मिला। Streamlit Secrets check करो।"
+
+        return (
+            None,
+            "OPENROUTER_API_KEY नहीं मिला। Streamlit Secrets check करो।"
+        )
 
     try:
 
         response = requests.post(
+
             "https://openrouter.ai/api/v1/chat/completions",
+
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
             },
+
             json={
                 "model": "openrouter/free",
+
                 "messages": [
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
+
                 "temperature": 0.7,
             },
+
             timeout=120
         )
+
 
         if response.status_code != 200:
 
             try:
+
                 error_data = response.json()
 
-                error_message = error_data.get(
-                    "error",
-                    {}
-                ).get(
-                    "message",
-                    response.text
+                error_message = (
+                    error_data
+                    .get("error", {})
+                    .get("message", response.text)
                 )
 
             except Exception:
+
                 error_message = response.text
 
-            return None, f"OpenRouter Error: {error_message}"
+
+            return (
+                None,
+                f"OpenRouter Error: {error_message}"
+            )
+
 
         data = response.json()
 
@@ -143,20 +288,34 @@ def openrouter_request(prompt):
 
         return result.strip(), None
 
+
     except requests.exceptions.Timeout:
 
-        return None, "AI response में बहुत समय लग रहा है। फिर से try करो।"
+        return (
+            None,
+            "AI response में बहुत समय लग रहा है। फिर से try करो।"
+        )
+
 
     except Exception as e:
 
-        return None, f"Connection Error: {str(e)}"
+        return (
+            None,
+            f"Connection Error: {str(e)}"
+        )
 
 
 # =========================================================
 # AI STORY
 # =========================================================
 
-def generate_ai_story(idea, duration, style, character):
+def generate_ai_story(
+    idea,
+    duration,
+    style,
+    character,
+    expected_clips
+):
 
     prompt = f"""
 तुम AYANT Content AI के professional Hindi cinematic story writer हो।
@@ -167,38 +326,79 @@ USER VIDEO IDEA:
 VIDEO DURATION:
 {duration}
 
-IMPORTANT VIDEO CLIP RULE:
-हर generated video clip EXACTLY 8 SECONDS की होगी।
-किसी भी scene को 8 seconds से ज्यादा या कम duration मत दो।
+EXACT CLIP COUNT:
+{expected_clips}
+
+IMPORTANT:
+
+इस project में:
+
+- 1 clip = exactly 8 seconds
+- हर clip के लिए 2 images होंगी
+- Image 1 = Start Frame
+- Image 2 = End Frame
+- दोनों images से 1 video clip बनेगी
+
+इसलिए इस कहानी को EXACTLY {expected_clips} sequential
+8-second clips के लिए design करो।
 
 VISUAL STYLE:
 {style}
 
-CHARACTER:
+FORMAT:
+{aspect_ratio}
+
+USER CHARACTER LOCK:
 {character}
 
 PERMANENT AYANT CLOTHING LOCK:
 {FIXED_AYANT_CLOTHING}
 
-एक engaging Hindi short-video story लिखो।
+STORY RULES:
 
-RULES:
-
-- पूरी कहानी हिंदी में हो।
-- शुरुआत में strong hook हो।
+- पूरी कहानी साफ़ और natural Hindi में लिखो।
+- Hindi sentences के लिए standard Unicode Devanagari इस्तेमाल करो।
+- Chinese, Japanese या random decorative Unicode characters मत इस्तेमाल करो।
+- Strong hook से शुरुआत करो।
 - कहानी cinematic और visual हो।
-- suspense और curiosity जहाँ suitable हो वहाँ रखो।
-- Main character की identity और appearance बिल्कुल Character Lock के अनुसार रखो।
-- अगर Ayant story में है तो उसका fixed black T-shirt,
-  white "AYANT" front/back text, black pants और white shoes
-  हर scene में same रहेंगे।
-- कहानी को ऐसे structure करो कि scenes को EXACTLY 8-second clips
-  में convert किया जा सके।
-- अनावश्यक characters या locations मत जोड़ो।
-- केवल final story दो।
-- Scene prompts मत दो।
-- Image prompts मत दो।
-- Video prompts मत दो।
+- कहानी एक continuous story हो।
+- हर अगला भाग पिछले भाग से naturally continue हो।
+- कहानी को EXACTLY {expected_clips} sequential clips में divide
+  करने योग्य बनाओ।
+- हर clip में केवल वही action हो जो 8 seconds में naturally हो सके।
+- अनावश्यक characters मत जोड़ो।
+- अनावश्यक locations मत बदलो।
+- Main character की identity और appearance consistent रखो।
+- अगर Ayant story में है तो उसका fixed clothing lock हर scene में लागू होगा।
+- कहानी में अचानक wardrobe change मत करो।
+- कहानी में अचानक environment change मत करो।
+- random events मत जोड़ो।
+
+IMPORTANT VISUAL TEXT RULE:
+
+Generated images और videos में कोई unnecessary written text नहीं होना चाहिए।
+
+No:
+- subtitles
+- captions
+- random letters
+- random words
+- labels
+- posters
+- banners
+- watermarks
+- typography
+- random logos
+- signs containing readable text
+
+EXCEPTION:
+Ayant के black T-shirt पर explicitly requested white "AYANT"
+text allowed और permanently locked है।
+
+केवल final story दो।
+Scene prompts मत दो।
+Image prompts मत दो।
+Video prompts मत दो।
 """
 
     return openrouter_request(prompt)
@@ -213,11 +413,12 @@ def generate_continuity_and_scenes(
     duration,
     style,
     aspect_ratio,
-    character
+    character,
+    expected_clips
 ):
 
     prompt = f"""
-तुम AYANT Content AI के strict cinematic continuity director हो।
+तुम AYANT Content AI के STRICT cinematic continuity director हो।
 
 STORY:
 {story}
@@ -225,14 +426,11 @@ STORY:
 VIDEO DURATION:
 {duration}
 
-IMPORTANT CLIP DURATION RULE:
-हर individual scene/video clip EXACTLY 8 SECONDS का होना चाहिए।
+EXACT REQUIRED CLIP COUNT:
+{expected_clips}
 
-कोई भी scene:
-- 8 seconds से कम नहीं
-- 8 seconds से ज्यादा नहीं
-
-होना चाहिए।
+EVERY CLIP:
+EXACTLY 8 SECONDS
 
 VISUAL STYLE:
 {style}
@@ -246,84 +444,234 @@ USER CHARACTER LOCK:
 PERMANENT AYANT CLOTHING LOCK:
 {FIXED_AYANT_CLOTHING}
 
-अब इस कहानी को production-ready scenes में break करो।
 
-========================
-STRICT CONTINUITY RULES
-========================
+==================================================
+ABSOLUTE SCENE COUNT RULE
+==================================================
 
-CHARACTER LOCK:
-Character का face, skin tone, age, body proportions, hairstyle,
-beard/moustache और overall appearance हर relevant scene में
-बिल्कुल same रहने चाहिए।
+GENERATE EXACTLY {expected_clips} CLIPS/SCENES.
 
-AYANT CLOTHING LOCK:
-अगर character Ayant है तो उसके कपड़े हर scene में EXACTLY:
+NOT 3.
+NOT {expected_clips - 1}.
+NOT {expected_clips + 1}.
 
+EXACTLY {expected_clips} scenes only.
+
+
+==================================================
+CHARACTER LOCK
+==================================================
+
+हर character का:
+
+- face
+- identity
+- age
+- skin tone
+- body proportions
+- height/proportions
+- hairstyle
+- beard/moustache
+- clothing
+- clothing colors
+- clothing design
+- shoes
+- accessories
+
+LOCKED रहेगा।
+
+जब कोई character पहली बार दिखाई देता है,
+उसका complete visual identity और outfit establish करो।
+
+उसके बाद उस character के सभी later scenes में वही exact
+appearance और wardrobe maintain करो।
+
+Character का look केवल तभी बदल सकता है जब USER STORY
+explicitly clothing/look change मांगती हो।
+
+AI अपनी तरफ से कोई wardrobe change नहीं करेगा।
+
+
+==================================================
+AYANT LOCK
+==================================================
+
+अगर Ayant scene में मौजूद है तो:
+
+- same face
+- same skin tone
+- same body proportions
+- same hairstyle
+- same beard/moustache
 - black T-shirt
-- white "AYANT" text on the FRONT
-- white "AYANT" text on the BACK
+- white "AYANT" front text
+- white "AYANT" back text
 - black pants
 - white shoes
 
-रहेंगे।
+हर scene और हर frame में exactly same रहेंगे।
 
-इनमें कोई बदलाव नहीं होगा।
 
-No wardrobe change.
-No shirt color change.
-No pants color change.
-No shoe change.
-No text change.
-No logo change.
-No clothing morphing.
-No extra clothing.
-No removed clothing.
+==================================================
+LOCATION LOCK
+==================================================
 
-LOCATION LOCK:
-एक बार location establish होने के बाद वही environment, architecture,
-landscape, background, weather और lighting continuity maintain करो।
-Location केवल तभी बदले जब कहानी में explicitly location change हो।
+हर location का canonical environment establish करो।
 
-OBJECT LOCK:
-Important objects की appearance, size, position और orientation
-consistent रहनी चाहिए।
+Location में बिना explicit story change के कोई बदलाव नहीं होगा।
 
-POSITION LOCK:
-अगले scene में previous scene की अंतिम position, pose,
-body orientation, hand/leg placement, expression और gaze को
-natural continuation के रूप में carry forward करो।
+Lock:
 
-MOVEMENT LOCK:
-सिर्फ वही action/movement करो जो current scene में explicitly
-लिखा है।
+- architecture
+- landscape
+- trees
+- buildings
+- roads
+- ground
+- background
+- weather
+- atmosphere
+- time of day
+- lighting conditions
+
+AI अपनी तरफ से नया location नहीं बनाएगा।
+
+
+==================================================
+OBJECT LOCK
+==================================================
+
+Important objects का:
+
+- appearance
+- size
+- shape
+- color
+- position
+- orientation
+
+consistent रहेगा।
+
+AI अपनी तरफ से नया important object add नहीं करेगा।
+
+
+==================================================
+POSITION / POSE LOCK
+==================================================
+
+हर scene पिछले scene के END STATE से continue होगा।
+
+Carry forward:
+
+- character position
+- body orientation
+- pose
+- hand placement
+- leg placement
+- facial expression
+- gaze direction
+- object positions
+- ongoing action state
+
+
+==================================================
+MOVEMENT LOCK
+==================================================
+
+Current scene में केवल वही movement/action होगा
+जो story में required है।
 
 AI अपनी तरफ से:
-- नया character
-- नया object
-- नया location
+
 - extra movement
 - extra action
-- random camera movement
 - random event
+- random camera movement
+- random character reaction
 
 नहीं जोड़ेगा।
 
-8-SECOND CLIP LOCK:
-हर scene EXACTLY 8 SECONDS का production clip है।
 
-हर scene के action को सिर्फ 8 seconds के अंदर naturally complete
-होने वाला रखो।
+==================================================
+START FRAME / END FRAME SYSTEM
+==================================================
 
-VISUAL STYLE LOCK:
-पूरी story में {style} maintain करो।
+हर scene/clip में EXACTLY 2 images होंगी:
+
+1. START FRAME
+2. END FRAME
+
+इन दोनों images के बीच 1 video clip बनेगी।
+
+Scene N का END FRAME,
+Scene N+1 के START FRAME का exact continuity reference होगा।
+
+इसलिए:
+
+Scene 1 End
+↓
+Scene 2 Start
+
+Scene 2 End
+↓
+Scene 3 Start
+
+और इसी तरह पूरी story में continuity maintain करो।
+
+
+==================================================
+8 SECOND LOCK
+==================================================
+
+हर clip EXACTLY 8 SECONDS की होगी।
+
+हर scene का action 8-second timeline में naturally fit होना चाहिए।
+
+
+==================================================
+VISUAL TEXT RULE
+==================================================
+
+Images/videos में कोई unnecessary text generate मत करो।
+
+Do not add:
+
+- subtitles
+- captions
+- random letters
+- random words
+- labels
+- posters
+- banners
+- watermarks
+- typography
+- random logos
+- readable signs
+
+EXCEPTION:
+
+Ayant के T-shirt पर explicitly requested white "AYANT"
+text allowed है।
+
+
+==================================================
+VISUAL STYLE LOCK
+==================================================
+
+पूरी story में:
+
+{style}
+
+maintain करो।
 
 FORMAT:
+
 {aspect_ratio}
 
-========================
+
+==================================================
 OUTPUT
-========================
+==================================================
 
 पहले:
 
@@ -335,7 +683,10 @@ CHARACTERS:
 AYANT CLOTHING LOCK:
 ...
 
-LOCATION:
+OTHER CHARACTER CLOTHING LOCK:
+...
+
+LOCATIONS:
 ...
 
 IMPORTANT OBJECTS:
@@ -347,13 +698,21 @@ TIME / WEATHER / LIGHTING:
 VISUAL STYLE:
 ...
 
+CLIP COUNT:
+Exactly {expected_clips}
+
 CLIP DURATION:
-Exactly 8 seconds per clip.
+Exactly 8 seconds each
+
+FRAME SYSTEM:
+Start Frame + End Frame per clip
 
 CONTINUITY RULE:
 ...
 
-फिर हर scene:
+फिर EXACTLY {expected_clips} scenes दो।
+
+हर scene:
 
 ### SCENE 1
 
@@ -361,6 +720,12 @@ DURATION:
 EXACTLY 8 SECONDS
 
 ACTION:
+...
+
+START FRAME:
+...
+
+END FRAME:
 ...
 
 CHARACTER POSITION:
@@ -372,22 +737,20 @@ EXPRESSION / GAZE:
 LOCATION:
 ...
 
+OBJECTS:
+...
+
 CAMERA:
-...
-
-IMAGE PROMPT:
-...
-
-IMAGE-TO-VIDEO PROMPT:
 ...
 
 CONTINUITY FROM PREVIOUS SCENE:
 ...
 
-फिर Scene 2 और आगे के सभी scenes इसी format में।
+फिर Scene 2...
 
-हर scene के IMAGE PROMPT और IMAGE-TO-VIDEO PROMPT में
-locked character और location details maintain करो।
+और इसी तरह EXACTLY {expected_clips} scenes।
+
+कोई extra scene मत बनाओ।
 """
 
 
@@ -395,7 +758,7 @@ locked character और location details maintain करो।
 
 
 # =========================================================
-# COPYABLE SCENE PROMPTS
+# FINAL GOOGLE FLOW PROMPTS
 # =========================================================
 
 def generate_copyable_scene_prompts(
@@ -404,7 +767,8 @@ def generate_copyable_scene_prompts(
     duration,
     style,
     aspect_ratio,
-    character
+    character,
+    expected_clips
 ):
 
     prompt = f"""
@@ -428,23 +792,92 @@ STYLE:
 FORMAT:
 {aspect_ratio}
 
-IMPORTANT:
-Every video clip MUST be EXACTLY 8 SECONDS.
+REQUIRED CLIPS:
+EXACTLY {expected_clips}
 
-तुम्हारा काम है ऊपर दिए गए scenes को final production prompts
-में convert करना।
+EVERY CLIP:
+EXACTLY 8 SECONDS
 
-========================
-STRICT RULES
-========================
 
-1. हर scene previous scene का natural continuation होना चाहिए।
+==================================================
+ABSOLUTE COUNT RULE
+==================================================
 
-2. Character की exact identity और appearance हर relevant scene में
-same रखो।
+Generate EXACTLY {expected_clips} scenes.
 
-3. अगर character Ayant है, तो उसके कपड़े हर single scene में
-EXACTLY SAME होने चाहिए:
+Each scene = one video clip.
+
+Each scene MUST contain:
+
+1. START FRAME IMAGE PROMPT
+2. END FRAME IMAGE PROMPT
+3. ONE IMAGE-TO-VIDEO PROMPT
+
+Therefore total output must contain:
+
+{expected_clips} Start Frame image prompts
++
+{expected_clips} End Frame image prompts
++
+{expected_clips} video prompts.
+
+
+==================================================
+CRITICAL CONTINUITY
+==================================================
+
+Scene 1 establishes the initial visual state.
+
+For every next scene:
+
+Scene N START FRAME must naturally continue
+from Scene N-1 END FRAME.
+
+Do not reset the character.
+Do not reset the location.
+Do not reset objects.
+Do not reset pose.
+Do not reset clothing.
+
+The next scene must feel like the exact next moment
+of the previous scene.
+
+
+==================================================
+CHARACTER LOCK
+==================================================
+
+Every character must maintain:
+
+- same face
+- same identity
+- same age
+- same skin tone
+- same body proportions
+- same hairstyle
+- same beard/moustache
+- same clothing
+- same clothing colors
+- same clothing design
+- same shoes
+- same accessories
+
+No character redesign.
+
+No face morphing.
+
+No body morphing.
+
+No hairstyle change.
+
+No wardrobe change unless explicitly required by the user story.
+
+
+==================================================
+AYANT CLOTHING LOCK
+==================================================
+
+Whenever Ayant appears:
 
 BLACK T-SHIRT
 WHITE "AYANT" TEXT ON FRONT
@@ -452,14 +885,57 @@ WHITE "AYANT" TEXT ON BACK
 BLACK PANTS
 WHITE SHOES
 
-4. Ayant के clothing में किसी भी प्रकार का बदलाव STRICTLY FORBIDDEN है।
+These details MUST remain exactly identical
+in every Start Frame, End Frame and video clip.
 
-5. Location और environment locked रहेंगे जब तक story explicitly
-location change न करे।
+No clothing variation.
+No wardrobe change.
+No color change.
+No redesign.
 
-6. Important objects locked रहेंगे।
 
-7. Previous scene की अंतिम:
+==================================================
+LOCATION LOCK
+==================================================
+
+Maintain exact:
+
+- environment
+- architecture
+- landscape
+- background
+- weather
+- time of day
+- lighting
+- atmosphere
+
+unless story explicitly changes location.
+
+No random location changes.
+
+
+==================================================
+OBJECT LOCK
+==================================================
+
+Important objects must retain:
+
+- same appearance
+- same size
+- same color
+- same shape
+- same position
+- same orientation
+
+unless the story explicitly moves them.
+
+
+==================================================
+POSITION / POSE / GAZE CONTINUITY
+==================================================
+
+Carry forward the previous End Frame state:
+
 - position
 - pose
 - body orientation
@@ -467,63 +943,101 @@ location change न करे।
 - leg placement
 - facial expression
 - gaze direction
+- object positions
+- ongoing movement state
 
-अगले scene में natural continuity के साथ carry forward होगी।
+Only change what the current action explicitly requires.
 
-8. Current scene में केवल वही movement/action होगा जो story और
-scene breakdown में explicitly दिया गया है।
 
-9. अपनी तरफ से कोई:
-- नया character
-- नया object
-- नया location
-- extra movement
-- extra action
+==================================================
+MOVEMENT LOCK
+==================================================
+
+Do not add:
+
+- new movement
+- new action
+- random reaction
 - random event
 - random camera movement
+- new character
+- new object
+- new location
 
-मत जोड़ो।
 
-10. IMAGE PROMPT में image बनाने के लिए complete visual description दो।
+==================================================
+IMAGE PROMPT RULE
+==================================================
 
-11. IMAGE-TO-VIDEO PROMPT में केवल existing image को animate करो।
-नई चीजें add मत करो।
+Each image prompt must describe the COMPLETE visual state
+required for that frame.
 
-12. Image-to-video prompt में character का:
-- face
-- hairstyle
-- body
-- skin tone
-- clothing
-- shoes
-- text on clothing
+The Start Frame and End Frame must look like two
+consistent moments of the SAME scene.
 
-बदलना, morph करना या redesign करना STRICTLY FORBIDDEN है।
+Do not create unrelated images.
 
-13. Image-to-video prompt में कोई नया character, object,
-background element या event add मत करो।
 
-14. Camera movement भी केवल तभी करो जब scene में explicitly
-required हो। Random camera movement मत जोड़ो।
+==================================================
+IMAGE-TO-VIDEO RULE
+==================================================
 
-15. GOOGLE FLOW CLIP DURATION:
-हर IMAGE-TO-VIDEO PROMPT में स्पष्ट रूप से लिखो:
+Animate ONLY the existing Start Frame toward the End Frame.
 
-"Duration: exactly 8 seconds."
+Do not introduce anything that is not already established.
 
-16. किसी भी scene के लिए 6 sec, 7 sec, 10 sec, 12 sec
-या कोई दूसरी duration मत लिखो।
+No:
 
-17. हर clip का पूरा action exactly 8-second timeline में naturally
-perform होना चाहिए।
+- character morphing
+- face changing
+- clothing changing
+- body changing
+- object morphing
+- location changing
+- random new elements
+- random camera movement
 
-18. Google Flow के लिए prompts English में लिखो।
 
-========================
+==================================================
+VISUAL TEXT RULE
+==================================================
+
+Do NOT generate:
+
+- subtitles
+- captions
+- random text
+- random letters
+- random words
+- labels
+- posters
+- banners
+- watermarks
+- typography
+- random logos
+- readable signs
+
+EXCEPTION:
+
+Ayant's explicitly requested white "AYANT" T-shirt text
+is allowed and must remain locked.
+
+
+==================================================
+GOOGLE FLOW
+==================================================
+
+All IMAGE PROMPTS and IMAGE-TO-VIDEO PROMPTS
+must be written in English.
+
+Every video prompt MUST explicitly contain:
+
+Duration: exactly 8 seconds.
+
+
+==================================================
 EXACT OUTPUT FORMAT
-========================
-
-हर scene के लिए EXACTLY:
+==================================================
 
 SCENE_START
 
@@ -532,34 +1046,25 @@ SCENE_NUMBER: 1
 DURATION:
 EXACTLY 8 SECONDS
 
-IMAGE_PROMPT:
-[complete English image prompt]
+START_FRAME_IMAGE_PROMPT:
+[complete English prompt]
+
+END_FRAME_IMAGE_PROMPT:
+[complete English prompt]
 
 IMAGE_TO_VIDEO_PROMPT:
-[complete English image-to-video prompt]
+[complete English prompt]
 
 SCENE_END
 
-फिर अगला scene:
 
-SCENE_START
+Then Scene 2.
 
-SCENE_NUMBER: 2
+Continue until exactly {expected_clips} scenes.
 
-DURATION:
-EXACTLY 8 SECONDS
-
-IMAGE_PROMPT:
-...
-
-IMAGE_TO_VIDEO_PROMPT:
-...
-
-SCENE_END
-
-इसी तरह सभी scenes दो।
-
-कोई extra explanation मत दो।
+DO NOT generate fewer scenes.
+DO NOT generate more scenes.
+DO NOT add explanations.
 """
 
 
@@ -567,7 +1072,7 @@ SCENE_END
 
 
 # =========================================================
-# PARSE SCENES
+# PARSE FINAL SCENES
 # =========================================================
 
 def parse_scenes(text):
@@ -587,8 +1092,14 @@ def parse_scenes(text):
             block
         )
 
-        image_match = re.search(
-            r"IMAGE_PROMPT:\s*(.*?)(?=\nIMAGE_TO_VIDEO_PROMPT:)",
+        start_match = re.search(
+            r"START_FRAME_IMAGE_PROMPT:\s*(.*?)(?=\nEND_FRAME_IMAGE_PROMPT:)",
+            block,
+            re.DOTALL
+        )
+
+        end_match = re.search(
+            r"END_FRAME_IMAGE_PROMPT:\s*(.*?)(?=\nIMAGE_TO_VIDEO_PROMPT:)",
             block,
             re.DOTALL
         )
@@ -599,17 +1110,31 @@ def parse_scenes(text):
             re.DOTALL
         )
 
-        if image_match and video_match:
+        if start_match and end_match and video_match:
 
-            scenes.append({
-                "number": (
-                    number_match.group(1).strip()
-                    if number_match else str(len(scenes) + 1)
-                ),
-                "duration": "EXACTLY 8 SECONDS",
-                "image_prompt": image_match.group(1).strip(),
-                "video_prompt": video_match.group(1).strip()
-            })
+            scenes.append(
+                {
+                    "number": (
+                        number_match.group(1).strip()
+                        if number_match
+                        else str(len(scenes) + 1)
+                    ),
+
+                    "duration": "EXACTLY 8 SECONDS",
+
+                    "start_frame_prompt": (
+                        start_match.group(1).strip()
+                    ),
+
+                    "end_frame_prompt": (
+                        end_match.group(1).strip()
+                    ),
+
+                    "video_prompt": (
+                        video_match.group(1).strip()
+                    )
+                }
+            )
 
     return scenes
 
@@ -618,47 +1143,108 @@ def parse_scenes(text):
 # MAIN WORKFLOW
 # =========================================================
 
-if st.button("🚀 STORY WORKFLOW START", type="primary"):
+if st.button(
+    "🚀 STORY WORKFLOW START",
+    type="primary"
+):
 
     if not idea.strip():
 
-        st.warning("पहले अपनी story या video idea लिखो।")
+        st.warning(
+            "पहले अपनी story या video idea लिखो।"
+        )
 
     else:
 
-        st.success("Content workflow शुरू हो गया!")
+        st.success(
+            "Content workflow शुरू हो गया!"
+        )
 
-        st.markdown("## 🎬 VIDEO PLAN")
 
-        st.write(f"**Duration:** {duration}")
-        st.write(f"**Clip Duration:** EXACTLY 8 SECONDS")
-        st.write(f"**Style:** {style}")
-        st.write(f"**Format:** {aspect_ratio}")
+        # =================================================
+        # VIDEO PLAN
+        # =================================================
+
+        st.markdown(
+            "## 🎬 VIDEO PLAN"
+        )
+
+        st.write(
+            f"**Selected Duration:** {duration}"
+        )
+
+        st.write(
+            f"**Clips:** {expected_clips}"
+        )
+
+        st.write(
+            f"**Images:** {expected_images}"
+        )
+
+        st.write(
+            "**Images per Clip:** 2 "
+            "(Start Frame + End Frame)"
+        )
+
+        st.write(
+            "**Clip Duration:** EXACTLY 8 SECONDS"
+        )
+
+        st.write(
+            f"**Style:** {style}"
+        )
+
+        st.write(
+            f"**Format:** {aspect_ratio}"
+        )
 
 
         # =================================================
         # STORY
         # =================================================
 
-        with st.spinner("🤖 AI तुम्हारी कहानी लिख रहा है..."):
+        with st.spinner(
+            "🤖 AI तुम्हारी कहानी लिख रहा है..."
+        ):
 
-            generated_story, story_error = generate_ai_story(
-                idea,
-                duration,
-                style,
-                character
+            generated_story, story_error = (
+                generate_ai_story(
+                    idea,
+                    duration,
+                    style,
+                    character,
+                    expected_clips
+                )
             )
 
 
         if story_error:
 
-            st.error(story_error)
+            st.error(
+                story_error
+            )
 
         else:
 
-            st.markdown("## 📖 AI GENERATED STORY")
+            st.markdown(
+                "## 📖 AI GENERATED STORY"
+            )
 
-            st.write(generated_story)
+            safe_story = html.escape(
+                generated_story
+            ).replace(
+                "\n",
+                "<br>"
+            )
+
+            st.markdown(
+                f"""
+                <div class="hindi-story">
+                    {safe_story}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
 
             # =================================================
@@ -666,7 +1252,8 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
             # =================================================
 
             with st.spinner(
-                "🔒 Character, Location और Scene Continuity तैयार हो रही है..."
+                "🔒 Characters, Clothing, Location, Objects और "
+                "Scene Continuity तैयार हो रही है..."
             ):
 
                 continuity_output, continuity_error = (
@@ -675,14 +1262,17 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
                         duration,
                         style,
                         aspect_ratio,
-                        character
+                        character,
+                        expected_clips
                     )
                 )
 
 
             if continuity_error:
 
-                st.error(continuity_error)
+                st.error(
+                    continuity_error
+                )
 
             else:
 
@@ -690,15 +1280,18 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
                     "## 🔒 STORY CONTINUITY + SCENE BREAKDOWN"
                 )
 
-                st.write(continuity_output)
+                st.write(
+                    continuity_output
+                )
 
 
                 # =================================================
-                # COPYABLE GOOGLE FLOW PROMPTS
+                # FINAL PROMPTS
                 # =================================================
 
                 with st.spinner(
-                    "🎨 हर scene के final Google Flow prompts बनाए जा रहे हैं..."
+                    "🎨 Start Frame, End Frame और "
+                    "Image-to-Video prompts बनाए जा रहे हैं..."
                 ):
 
                     scene_output, scene_error = (
@@ -708,68 +1301,123 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
                             duration,
                             style,
                             aspect_ratio,
-                            character
+                            character,
+                            expected_clips
                         )
                     )
 
 
                 if scene_error:
 
-                    st.error(scene_error)
+                    st.error(
+                        scene_error
+                    )
 
                 else:
 
-                    scenes = parse_scenes(scene_output)
-
-                    st.markdown(
-                        "## 🎬 GOOGLE FLOW — COPYABLE SCENE PROMPTS"
+                    scenes = parse_scenes(
+                        scene_output
                     )
 
-                    if not scenes:
+
+                    st.markdown(
+                        "## 🎬 GOOGLE FLOW — COPYABLE PROMPTS"
+                    )
+
+
+                    # =================================================
+                    # COUNT VALIDATION
+                    # =================================================
+
+                    if len(scenes) != expected_clips:
 
                         st.warning(
-                            "Scenes generate हुए लेकिन उनका format "
-                            "read नहीं हो पाया। फिर से STORY WORKFLOW START करो।"
+                            f"⚠️ AI ने {expected_clips} scenes की जगह "
+                            f"{len(scenes)} scenes read किए। "
+                            f"Workflow को दोबारा START करना बेहतर रहेगा।"
                         )
+
 
                     else:
 
                         st.success(
-                            f"✅ {len(scenes)} scenes के prompts तैयार हैं। "
-                            f"हर clip EXACTLY 8 seconds की है।"
+                            f"✅ EXACTLY {expected_clips} clips तैयार हैं | "
+                            f"🖼️ EXACTLY {expected_images} images के prompts | "
+                            f"🎥 {expected_clips} video prompts"
                         )
 
-                        for scene in scenes:
 
-                            st.markdown(
-                                f"## 🎬 SCENE {scene['number']}"
-                            )
+                    # =================================================
+                    # DISPLAY EACH SCENE
+                    # =================================================
 
-                            st.caption(
-                                "Duration: EXACTLY 8 SECONDS"
-                            )
+                    for scene in scenes:
 
-                            st.markdown("### 🎨 IMAGE PROMPT")
+                        st.markdown(
+                            f"## 🎬 CLIP / SCENE {scene['number']}"
+                        )
 
-                            st.code(
-                                scene["image_prompt"],
-                                language="text"
-                            )
+                        st.caption(
+                            "Duration: EXACTLY 8 SECONDS | "
+                            "2 Images: Start Frame + End Frame"
+                        )
 
-                            st.markdown(
-                                "### 🎥 IMAGE-TO-VIDEO PROMPT"
-                            )
 
-                            st.code(
-                                scene["video_prompt"],
-                                language="text"
-                            )
+                        # ---------------------------------------------
+                        # START FRAME
+                        # ---------------------------------------------
 
-                            st.divider()
+                        st.markdown(
+                            "### 🟢 START FRAME — IMAGE PROMPT"
+                        )
+
+                        st.code(
+                            scene["start_frame_prompt"],
+                            language="text"
+                        )
+
+
+                        # ---------------------------------------------
+                        # END FRAME
+                        # ---------------------------------------------
+
+                        st.markdown(
+                            "### 🔴 END FRAME — IMAGE PROMPT"
+                        )
+
+                        st.code(
+                            scene["end_frame_prompt"],
+                            language="text"
+                        )
+
+
+                        # ---------------------------------------------
+                        # VIDEO
+                        # ---------------------------------------------
+
+                        st.markdown(
+                            "### 🎥 IMAGE-TO-VIDEO PROMPT"
+                        )
+
+                        st.code(
+                            scene["video_prompt"],
+                            language="text"
+                        )
+
+
+                        st.divider()
+
+
+                    # =================================================
+                    # FINAL SUMMARY
+                    # =================================================
+
+                    if len(scenes) == expected_clips:
 
                         st.success(
-                            "🎉 सभी scene prompts Google Flow में "
-                            "copy-paste करने के लिए तैयार हैं। "
-                            "हर clip exactly 8 seconds की है और "
-                            "Ayant का clothing lock fixed है।"
+                            "🎉 Workflow complete! "
+                            f"{expected_clips} clips × 2 images = "
+                            f"{expected_images} images और "
+                            f"{expected_clips} Image-to-Video prompts "
+                            "Google Flow के लिए तैयार हैं।"
                         )
