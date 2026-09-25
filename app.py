@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+import json
+import re
 
 st.set_page_config(
     page_title="AYANT Content AI",
@@ -8,7 +10,10 @@ st.set_page_config(
 )
 
 st.title("🎬 AYANT Content AI")
-st.caption("Story → Continuity Lock → Scenes → Image Prompts → Image-to-Video Prompts")
+st.caption(
+    "Story → Continuity Lock → Scenes → Image Prompts → "
+    "Image-to-Video Prompts → Google Flow"
+)
 
 st.divider()
 
@@ -180,8 +185,6 @@ def generate_continuity_and_scenes(
     prompt = f"""
 तुम AYANT Content AI के strict cinematic continuity director हो।
 
-नीचे एक पूरी कहानी दी गई है।
-
 STORY:
 {story}
 
@@ -199,92 +202,51 @@ USER CHARACTER LOCK:
 
 अब इस कहानी को production-ready scenes में break करो।
 
-सबसे महत्वपूर्ण नियम:
-
 ========================
-🔒 CONTINUITY RULES
+STRICT CONTINUITY RULES
 ========================
 
-1. CHARACTER LOCK:
-जो character शुरुआत में establish होता है, उसकी:
-- face
-- skin tone
-- age
-- body proportions
-- hairstyle
-- beard/moustache
-- clothing
-- shoes
-- accessories
+CHARACTER LOCK:
+Character का face, skin tone, age, body proportions, hairstyle,
+beard/moustache, clothing, shoes और accessories हर relevant scene
+में बिल्कुल same रहने चाहिए।
 
-हर relevant scene में बिल्कुल same रहने चाहिए।
+LOCATION LOCK:
+एक बार location establish होने के बाद वही environment, architecture,
+landscape, background, weather और lighting continuity maintain करो।
+Location केवल तभी बदले जब कहानी में explicitly location change हो।
 
-2. LOCATION LOCK:
-Story में जो मुख्य location establish होती है, उसका:
-- environment
-- architecture
-- landscape
-- trees
-- buildings
-- background
-- weather
-- time-of-day
-
-बिना कहानी में बदलाव के नहीं बदलना चाहिए।
-
-3. OBJECT LOCK:
-जो important objects पहले establish होते हैं, उनकी:
-- appearance
-- size
-- position
-- orientation
-
+OBJECT LOCK:
+Important objects की appearance, size, position और orientation
 consistent रहनी चाहिए।
 
-4. POSITION CONTINUITY:
-हर अगला scene पिछले scene का natural continuation होना चाहिए।
+POSITION LOCK:
+अगले scene में previous scene की अंतिम position, pose,
+body orientation, hand/leg placement, expression और gaze को
+natural continuation के रूप में carry forward करो।
 
-Character की:
-- exact position
-- body orientation
-- hand position
-- leg position
-- pose
-- facial expression
-- gaze direction
-
-जहाँ तक story अनुमति देती है, carry forward करो।
-
-5. MOVEMENT RULE:
-हर scene में केवल वही movement/action होगा जो उस scene में explicitly लिखा गया है।
+MOVEMENT LOCK:
+सिर्फ वही action/movement करो जो current scene में explicitly
+लिखा है।
 
 AI अपनी तरफ से:
-- extra walking
-- extra running
-- extra hand movement
-- extra characters
-- extra objects
-- extra actions
+- नया character
+- नया object
+- नया location
+- extra movement
+- extra action
 - random camera movement
 
 नहीं जोड़ेगा।
 
-6. NO RANDOM ADDITIONS:
-Story में जो establish नहीं हुआ है, उसे अपनी तरफ से add मत करो।
+VISUAL STYLE LOCK:
+पूरी story में {style} maintain करो।
 
-7. NATURAL CONTINUATION:
-Scene 2 को Scene 1 के अंतिम moment से naturally continue होना चाहिए।
-Scene 3 को Scene 2 के अंतिम moment से continue होना चाहिए।
-
-8. VISUAL STYLE LOCK:
-पूरी story में वही visual style maintain करो:
-{style}
-
-9. FORMAT:
-हर scene {aspect_ratio} के लिए बनाया जाएगा।
+FORMAT:
+{aspect_ratio}
 
 ========================
-OUTPUT FORMAT
+OUTPUT
 ========================
 
 पहले:
@@ -292,67 +254,249 @@ OUTPUT FORMAT
 ### STORY CONTINUITY LOCK
 
 CHARACTERS:
-[सभी characters की exact fixed appearance]
+...
 
 LOCATION:
-[मुख्य location की exact fixed description]
+...
 
 IMPORTANT OBJECTS:
-[सभी important objects]
+...
 
 TIME / WEATHER / LIGHTING:
-[fixed details]
+...
 
 VISUAL STYLE:
-{style}
+...
 
 CONTINUITY RULE:
-[एक strict continuity paragraph]
+...
 
-फिर scenes दो।
-
-हर scene exactly इस format में:
+फिर हर scene:
 
 ### SCENE 1
 
 DURATION:
-[scene duration]
+...
 
 ACTION:
-[सिर्फ इस scene में होने वाला exact action]
+...
 
 CHARACTER POSITION:
-[character की exact position और body orientation]
+...
 
 EXPRESSION / GAZE:
-[exact expression और gaze]
+...
 
 LOCATION:
-[locked location को maintain करते हुए]
+...
 
 CAMERA:
-[इस scene के लिए camera]
+...
 
 IMAGE PROMPT:
-[पूरा detailed image-generation prompt]
+...
 
 IMAGE-TO-VIDEO PROMPT:
-[सिर्फ established image को animate करने वाला prompt]
+...
 
 CONTINUITY FROM PREVIOUS SCENE:
-[पहले scene में: N/A
-अगले scenes में पिछले scene के अंतिम state से exact continuation]
+...
 
-IMPORTANT:
-हर scene के IMAGE PROMPT में CHARACTER LOCK और LOCATION LOCK की आवश्यक details automatically repeat करो।
+फिर Scene 2 और आगे के सभी scenes इसी format में।
 
-हर scene के IMAGE-TO-VIDEO PROMPT में भी वही continuity rules repeat करो।
-
-कोई नया character, location, object या movement अपने आप मत जोड़ो।
+हर scene के IMAGE PROMPT और IMAGE-TO-VIDEO PROMPT में
+locked character और location details maintain करो।
 """
 
 
     return openrouter_request(prompt)
+
+
+# =========================================================
+# COPYABLE SCENE PROMPTS
+# =========================================================
+
+def generate_copyable_scene_prompts(
+    story,
+    continuity_output,
+    duration,
+    style,
+    aspect_ratio,
+    character
+):
+
+    prompt = f"""
+तुम AYANT Content AI के professional Google Flow prompt director हो।
+
+STORY:
+{story}
+
+CONTINUITY + SCENE BREAKDOWN:
+{continuity_output}
+
+CHARACTER LOCK:
+{character}
+
+STYLE:
+{style}
+
+FORMAT:
+{aspect_ratio}
+
+तुम्हारा काम है ऊपर दिए गए scenes को final production prompts
+में convert करना।
+
+========================
+STRICT RULES
+========================
+
+1. हर scene previous scene का natural continuation होना चाहिए।
+
+2. Character की exact identity और appearance हर relevant scene में
+same रखो।
+
+3. Location और environment locked रहेंगे जब तक story explicitly
+location change न करे।
+
+4. Important objects locked रहेंगे।
+
+5. Previous scene की अंतिम:
+- position
+- pose
+- body orientation
+- hand placement
+- leg placement
+- facial expression
+- gaze direction
+
+अगले scene में natural continuity के साथ carry forward होगी।
+
+6. Current scene में केवल वही movement/action होगा जो story और
+scene breakdown में explicitly दिया गया है।
+
+7. अपनी तरफ से कोई:
+- नया character
+- नया object
+- नया location
+- extra movement
+- extra action
+- random event
+- random camera movement
+
+मत जोड़ो।
+
+8. IMAGE PROMPT में image बनाने के लिए complete visual description दो।
+
+9. IMAGE-TO-VIDEO PROMPT में केवल existing image को animate करो।
+नई चीजें add मत करो।
+
+10. Image-to-video prompt में character का appearance बदलना,
+face बदलना, clothing बदलना, body morphing या object morphing
+सख्त मना है।
+
+11. Google Flow के लिए prompts English में लिखो।
+
+========================
+EXACT OUTPUT FORMAT
+========================
+
+हर scene के लिए EXACTLY:
+
+SCENE_START
+
+SCENE_NUMBER: 1
+
+DURATION:
+[duration]
+
+IMAGE_PROMPT:
+[complete English image prompt]
+
+IMAGE_TO_VIDEO_PROMPT:
+[complete English image-to-video prompt]
+
+SCENE_END
+
+फिर अगला scene:
+
+SCENE_START
+
+SCENE_NUMBER: 2
+
+DURATION:
+[duration]
+
+IMAGE_PROMPT:
+...
+
+IMAGE_TO_VIDEO_PROMPT:
+...
+
+SCENE_END
+
+इसी तरह सभी scenes दो।
+
+कोई extra explanation मत दो।
+"""
+
+
+    return openrouter_request(prompt)
+
+
+# =========================================================
+# PARSE SCENES
+# =========================================================
+
+def parse_scenes(text):
+
+    scenes = []
+
+    blocks = re.findall(
+        r"SCENE_START(.*?)SCENE_END",
+        text,
+        re.DOTALL
+    )
+
+    for block in blocks:
+
+        number_match = re.search(
+            r"SCENE_NUMBER:\s*(.*)",
+            block
+        )
+
+        duration_match = re.search(
+            r"DURATION:\s*(.*)",
+            block
+        )
+
+        image_match = re.search(
+            r"IMAGE_PROMPT:\s*(.*?)(?=\nIMAGE_TO_VIDEO_PROMPT:)",
+            block,
+            re.DOTALL
+        )
+
+        video_match = re.search(
+            r"IMAGE_TO_VIDEO_PROMPT:\s*(.*)",
+            block,
+            re.DOTALL
+        )
+
+        if image_match and video_match:
+
+            scenes.append({
+                "number": (
+                    number_match.group(1).strip()
+                    if number_match else str(len(scenes) + 1)
+                ),
+                "duration": (
+                    duration_match.group(1).strip()
+                    if duration_match else ""
+                ),
+                "image_prompt": image_match.group(1).strip(),
+                "video_prompt": video_match.group(1).strip()
+            })
+
+    return scenes
 
 
 # =========================================================
@@ -377,7 +521,7 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
 
 
         # =================================================
-        # STORY GENERATION
+        # STORY
         # =================================================
 
         with st.spinner("🤖 AI तुम्हारी कहानी लिख रहा है..."):
@@ -402,7 +546,7 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
 
 
             # =================================================
-            # CONTINUITY + SCENES
+            # CONTINUITY
             # =================================================
 
             with st.spinner(
@@ -432,13 +576,82 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
 
                 st.write(continuity_output)
 
-                st.success(
-                    "✅ Story, Character Lock, Location Lock और "
-                    "Scene Continuity तैयार हो गई।"
-                )
 
-                st.info(
-                    "अगले module में इसी structure को अलग-अलग "
-                    "copyable Scene 1, Scene 2, Scene 3 prompts "
-                    "और Google Flow workflow में convert किया जा सकता है।"
-                )
+                # =================================================
+                # COPYABLE GOOGLE FLOW PROMPTS
+                # =================================================
+
+                with st.spinner(
+                    "🎨 हर scene के final Google Flow prompts बनाए जा रहे हैं..."
+                ):
+
+                    scene_output, scene_error = (
+                        generate_copyable_scene_prompts(
+                            generated_story,
+                            continuity_output,
+                            duration,
+                            style,
+                            aspect_ratio,
+                            character
+                        )
+                    )
+
+
+                if scene_error:
+
+                    st.error(scene_error)
+
+                else:
+
+                    scenes = parse_scenes(scene_output)
+
+                    st.markdown(
+                        "## 🎬 GOOGLE FLOW — COPYABLE SCENE PROMPTS"
+                    )
+
+                    if not scenes:
+
+                        st.warning(
+                            "Scenes generate हुए लेकिन उनका format "
+                            "read नहीं हो पाया। फिर से STORY WORKFLOW START करो।"
+                        )
+
+                    else:
+
+                        st.success(
+                            f"✅ {len(scenes)} scenes के prompts तैयार हैं।"
+                        )
+
+                        for scene in scenes:
+
+                            st.markdown(
+                                f"## 🎬 SCENE {scene['number']}"
+                            )
+
+                            if scene["duration"]:
+                                st.caption(
+                                    f"Duration: {scene['duration']}"
+                                )
+
+                            st.markdown("### 🎨 IMAGE PROMPT")
+
+                            st.code(
+                                scene["image_prompt"],
+                                language="text"
+                            )
+
+                            st.markdown(
+                                "### 🎥 IMAGE-TO-VIDEO PROMPT"
+                            )
+
+                            st.code(
+                                scene["video_prompt"],
+                                language="text"
+                            )
+
+                            st.divider()
+
+                        st.success(
+                            "🎉 सभी scene prompts Google Flow में "
+                            "copy-paste करने के लिए तैयार हैं।"
+                        )
