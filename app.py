@@ -50,6 +50,24 @@ with col3:
         ["9:16 Vertical", "16:9 Horizontal", "1:1 Square"]
     )
 
+
+# =========================================================
+# FIXED AYANT CHARACTER LOCK
+# =========================================================
+
+FIXED_AYANT_CLOTHING = """
+Ayant's clothing is permanently locked and MUST NEVER CHANGE:
+black T-shirt with the word "AYANT" written clearly in white letters
+on the FRONT and also on the BACK, black pants, and clean white shoes.
+
+These clothing details must remain exactly identical in every scene.
+Do not change the shirt color, shirt design, text, pants color, shoes,
+or add/remove clothing or accessories.
+
+No clothing variation, no wardrobe change, no color change,
+no logo change, no text change, no outfit morphing.
+"""
+
 st.subheader("🔒 Character Lock")
 
 character = st.text_area(
@@ -57,10 +75,15 @@ character = st.text_area(
     value=(
         "Ayant: young Indian male, wheatish skin, brown eyes, "
         "short trimmed beard and moustache, black hair tied in a high "
-        "man-bun/top-knot, consistent face, body and clothing across "
+        "man-bun/top-knot, consistent face, body and appearance across "
         "all scenes."
     ),
     height=120
+)
+
+st.info(
+    "🔒 Ayant Clothing Lock: Black T-shirt + white 'AYANT' text "
+    "front/back + black pants + white shoes | 🎥 Every clip: exactly 8 seconds"
 )
 
 
@@ -144,11 +167,18 @@ USER VIDEO IDEA:
 VIDEO DURATION:
 {duration}
 
+IMPORTANT VIDEO CLIP RULE:
+हर generated video clip EXACTLY 8 SECONDS की होगी।
+किसी भी scene को 8 seconds से ज्यादा या कम duration मत दो।
+
 VISUAL STYLE:
 {style}
 
 CHARACTER:
 {character}
+
+PERMANENT AYANT CLOTHING LOCK:
+{FIXED_AYANT_CLOTHING}
 
 एक engaging Hindi short-video story लिखो।
 
@@ -159,7 +189,11 @@ RULES:
 - कहानी cinematic और visual हो।
 - suspense और curiosity जहाँ suitable हो वहाँ रखो।
 - Main character की identity और appearance बिल्कुल Character Lock के अनुसार रखो।
-- कहानी duration के हिसाब से concise रखो।
+- अगर Ayant story में है तो उसका fixed black T-shirt,
+  white "AYANT" front/back text, black pants और white shoes
+  हर scene में same रहेंगे।
+- कहानी को ऐसे structure करो कि scenes को EXACTLY 8-second clips
+  में convert किया जा सके।
 - अनावश्यक characters या locations मत जोड़ो।
 - केवल final story दो।
 - Scene prompts मत दो।
@@ -191,6 +225,15 @@ STORY:
 VIDEO DURATION:
 {duration}
 
+IMPORTANT CLIP DURATION RULE:
+हर individual scene/video clip EXACTLY 8 SECONDS का होना चाहिए।
+
+कोई भी scene:
+- 8 seconds से कम नहीं
+- 8 seconds से ज्यादा नहीं
+
+होना चाहिए।
+
 VISUAL STYLE:
 {style}
 
@@ -200,6 +243,9 @@ FORMAT:
 USER CHARACTER LOCK:
 {character}
 
+PERMANENT AYANT CLOTHING LOCK:
+{FIXED_AYANT_CLOTHING}
+
 अब इस कहानी को production-ready scenes में break करो।
 
 ========================
@@ -208,8 +254,31 @@ STRICT CONTINUITY RULES
 
 CHARACTER LOCK:
 Character का face, skin tone, age, body proportions, hairstyle,
-beard/moustache, clothing, shoes और accessories हर relevant scene
-में बिल्कुल same रहने चाहिए।
+beard/moustache और overall appearance हर relevant scene में
+बिल्कुल same रहने चाहिए।
+
+AYANT CLOTHING LOCK:
+अगर character Ayant है तो उसके कपड़े हर scene में EXACTLY:
+
+- black T-shirt
+- white "AYANT" text on the FRONT
+- white "AYANT" text on the BACK
+- black pants
+- white shoes
+
+रहेंगे।
+
+इनमें कोई बदलाव नहीं होगा।
+
+No wardrobe change.
+No shirt color change.
+No pants color change.
+No shoe change.
+No text change.
+No logo change.
+No clothing morphing.
+No extra clothing.
+No removed clothing.
 
 LOCATION LOCK:
 एक बार location establish होने के बाद वही environment, architecture,
@@ -236,8 +305,15 @@ AI अपनी तरफ से:
 - extra movement
 - extra action
 - random camera movement
+- random event
 
 नहीं जोड़ेगा।
+
+8-SECOND CLIP LOCK:
+हर scene EXACTLY 8 SECONDS का production clip है।
+
+हर scene के action को सिर्फ 8 seconds के अंदर naturally complete
+होने वाला रखो।
 
 VISUAL STYLE LOCK:
 पूरी story में {style} maintain करो।
@@ -256,6 +332,9 @@ OUTPUT
 CHARACTERS:
 ...
 
+AYANT CLOTHING LOCK:
+...
+
 LOCATION:
 ...
 
@@ -268,6 +347,9 @@ TIME / WEATHER / LIGHTING:
 VISUAL STYLE:
 ...
 
+CLIP DURATION:
+Exactly 8 seconds per clip.
+
 CONTINUITY RULE:
 ...
 
@@ -276,7 +358,7 @@ CONTINUITY RULE:
 ### SCENE 1
 
 DURATION:
-...
+EXACTLY 8 SECONDS
 
 ACTION:
 ...
@@ -337,11 +419,17 @@ CONTINUITY + SCENE BREAKDOWN:
 CHARACTER LOCK:
 {character}
 
+PERMANENT AYANT CLOTHING LOCK:
+{FIXED_AYANT_CLOTHING}
+
 STYLE:
 {style}
 
 FORMAT:
 {aspect_ratio}
+
+IMPORTANT:
+Every video clip MUST be EXACTLY 8 SECONDS.
 
 तुम्हारा काम है ऊपर दिए गए scenes को final production prompts
 में convert करना।
@@ -355,12 +443,23 @@ STRICT RULES
 2. Character की exact identity और appearance हर relevant scene में
 same रखो।
 
-3. Location और environment locked रहेंगे जब तक story explicitly
+3. अगर character Ayant है, तो उसके कपड़े हर single scene में
+EXACTLY SAME होने चाहिए:
+
+BLACK T-SHIRT
+WHITE "AYANT" TEXT ON FRONT
+WHITE "AYANT" TEXT ON BACK
+BLACK PANTS
+WHITE SHOES
+
+4. Ayant के clothing में किसी भी प्रकार का बदलाव STRICTLY FORBIDDEN है।
+
+5. Location और environment locked रहेंगे जब तक story explicitly
 location change न करे।
 
-4. Important objects locked रहेंगे।
+6. Important objects locked रहेंगे।
 
-5. Previous scene की अंतिम:
+7. Previous scene की अंतिम:
 - position
 - pose
 - body orientation
@@ -371,10 +470,10 @@ location change न करे।
 
 अगले scene में natural continuity के साथ carry forward होगी।
 
-6. Current scene में केवल वही movement/action होगा जो story और
+8. Current scene में केवल वही movement/action होगा जो story और
 scene breakdown में explicitly दिया गया है।
 
-7. अपनी तरफ से कोई:
+9. अपनी तरफ से कोई:
 - नया character
 - नया object
 - नया location
@@ -385,16 +484,40 @@ scene breakdown में explicitly दिया गया है।
 
 मत जोड़ो।
 
-8. IMAGE PROMPT में image बनाने के लिए complete visual description दो।
+10. IMAGE PROMPT में image बनाने के लिए complete visual description दो।
 
-9. IMAGE-TO-VIDEO PROMPT में केवल existing image को animate करो।
+11. IMAGE-TO-VIDEO PROMPT में केवल existing image को animate करो।
 नई चीजें add मत करो।
 
-10. Image-to-video prompt में character का appearance बदलना,
-face बदलना, clothing बदलना, body morphing या object morphing
-सख्त मना है।
+12. Image-to-video prompt में character का:
+- face
+- hairstyle
+- body
+- skin tone
+- clothing
+- shoes
+- text on clothing
 
-11. Google Flow के लिए prompts English में लिखो।
+बदलना, morph करना या redesign करना STRICTLY FORBIDDEN है।
+
+13. Image-to-video prompt में कोई नया character, object,
+background element या event add मत करो।
+
+14. Camera movement भी केवल तभी करो जब scene में explicitly
+required हो। Random camera movement मत जोड़ो।
+
+15. GOOGLE FLOW CLIP DURATION:
+हर IMAGE-TO-VIDEO PROMPT में स्पष्ट रूप से लिखो:
+
+"Duration: exactly 8 seconds."
+
+16. किसी भी scene के लिए 6 sec, 7 sec, 10 sec, 12 sec
+या कोई दूसरी duration मत लिखो।
+
+17. हर clip का पूरा action exactly 8-second timeline में naturally
+perform होना चाहिए।
+
+18. Google Flow के लिए prompts English में लिखो।
 
 ========================
 EXACT OUTPUT FORMAT
@@ -407,7 +530,7 @@ SCENE_START
 SCENE_NUMBER: 1
 
 DURATION:
-[duration]
+EXACTLY 8 SECONDS
 
 IMAGE_PROMPT:
 [complete English image prompt]
@@ -424,7 +547,7 @@ SCENE_START
 SCENE_NUMBER: 2
 
 DURATION:
-[duration]
+EXACTLY 8 SECONDS
 
 IMAGE_PROMPT:
 ...
@@ -464,11 +587,6 @@ def parse_scenes(text):
             block
         )
 
-        duration_match = re.search(
-            r"DURATION:\s*(.*)",
-            block
-        )
-
         image_match = re.search(
             r"IMAGE_PROMPT:\s*(.*?)(?=\nIMAGE_TO_VIDEO_PROMPT:)",
             block,
@@ -488,10 +606,7 @@ def parse_scenes(text):
                     number_match.group(1).strip()
                     if number_match else str(len(scenes) + 1)
                 ),
-                "duration": (
-                    duration_match.group(1).strip()
-                    if duration_match else ""
-                ),
+                "duration": "EXACTLY 8 SECONDS",
                 "image_prompt": image_match.group(1).strip(),
                 "video_prompt": video_match.group(1).strip()
             })
@@ -516,6 +631,7 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
         st.markdown("## 🎬 VIDEO PLAN")
 
         st.write(f"**Duration:** {duration}")
+        st.write(f"**Clip Duration:** EXACTLY 8 SECONDS")
         st.write(f"**Style:** {style}")
         st.write(f"**Format:** {aspect_ratio}")
 
@@ -619,7 +735,8 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
                     else:
 
                         st.success(
-                            f"✅ {len(scenes)} scenes के prompts तैयार हैं।"
+                            f"✅ {len(scenes)} scenes के prompts तैयार हैं। "
+                            f"हर clip EXACTLY 8 seconds की है।"
                         )
 
                         for scene in scenes:
@@ -628,10 +745,9 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
                                 f"## 🎬 SCENE {scene['number']}"
                             )
 
-                            if scene["duration"]:
-                                st.caption(
-                                    f"Duration: {scene['duration']}"
-                                )
+                            st.caption(
+                                "Duration: EXACTLY 8 SECONDS"
+                            )
 
                             st.markdown("### 🎨 IMAGE PROMPT")
 
@@ -653,5 +769,7 @@ if st.button("🚀 STORY WORKFLOW START", type="primary"):
 
                         st.success(
                             "🎉 सभी scene prompts Google Flow में "
-                            "copy-paste करने के लिए तैयार हैं।"
+                            "copy-paste करने के लिए तैयार हैं। "
+                            "हर clip exactly 8 seconds की है और "
+                            "Ayant का clothing lock fixed है।"
                         )
