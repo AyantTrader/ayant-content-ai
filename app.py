@@ -49,8 +49,8 @@ st.markdown(
 st.title("🎬 AYANT Content AI")
 
 st.caption(
-    "Story → Continuity Lock → Scenes → Start/End Frames → "
-    "Image Prompts → Image-to-Video Prompts → Google Flow"
+    "Story → Master Continuity Bible → Scene State Lock → "
+    "Start/End Frames → Image Prompts → Image-to-Video Prompts → Google Flow"
 )
 
 st.divider()
@@ -206,10 +206,11 @@ character = st.text_area(
 
 
 st.info(
-    "🔒 Character + Clothing Lock | "
-    "📍 Location Lock | "
+    "🔒 Character Lock | "
+    "🏞️ Background Lock | "
     "🧱 Object Lock | "
-    "🔄 Pose/Position Continuity | "
+    "🔄 End→Start Continuity | "
+    "🗣️ Hindi Dialogue Lock | "
     f"🎬 {expected_clips} clips | "
     f"🖼️ {expected_images} images | "
     "⏱️ Every clip exactly 8 seconds"
@@ -318,7 +319,7 @@ def generate_ai_story(
 ):
 
     prompt = f"""
-तुम AYANT Content AI के professional Hindi cinematic story writer हो।
+You are AYANT Content AI, a professional cinematic Hindi story writer.
 
 USER VIDEO IDEA:
 {idea}
@@ -329,83 +330,63 @@ VIDEO DURATION:
 EXACT CLIP COUNT:
 {expected_clips}
 
-IMPORTANT:
-
-इस project में:
-
-- 1 clip = exactly 8 seconds
-- हर clip के लिए 2 images होंगी
-- Image 1 = Start Frame
-- Image 2 = End Frame
-- दोनों images से 1 video clip बनेगी
-
-इसलिए इस कहानी को EXACTLY {expected_clips} sequential
-8-second clips के लिए design करो।
-
 VISUAL STYLE:
 {style}
 
 FORMAT:
 {aspect_ratio}
 
-USER CHARACTER LOCK:
+CHARACTER:
 {character}
 
-PERMANENT AYANT CLOTHING LOCK:
+PERMANENT AYANT CLOTHING:
 {FIXED_AYANT_CLOTHING}
 
-STORY RULES:
+Write one continuous cinematic Hindi story designed for EXACTLY
+{expected_clips} sequential video clips.
 
-- पूरी कहानी साफ़ और natural Hindi में लिखो।
-- Hindi sentences के लिए standard Unicode Devanagari इस्तेमाल करो।
-- Chinese, Japanese या random decorative Unicode characters मत इस्तेमाल करो।
-- Strong hook से शुरुआत करो।
-- कहानी cinematic और visual हो।
-- कहानी एक continuous story हो।
-- हर अगला भाग पिछले भाग से naturally continue हो।
-- कहानी को EXACTLY {expected_clips} sequential clips में divide
-  करने योग्य बनाओ।
-- हर clip में केवल वही action हो जो 8 seconds में naturally हो सके।
-- अनावश्यक characters मत जोड़ो।
-- अनावश्यक locations मत बदलो।
-- Main character की identity और appearance consistent रखो।
-- अगर Ayant story में है तो उसका fixed clothing lock हर scene में लागू होगा।
-- कहानी में अचानक wardrobe change मत करो।
-- कहानी में अचानक environment change मत करो।
-- random events मत जोड़ो।
+IMPORTANT STORY RULES:
 
-IMPORTANT VISUAL TEXT RULE:
+1. The story must be written in clean, natural STANDARD HINDI.
+2. Use ONLY standard Unicode Devanagari for Hindi text.
+3. Do NOT use Chinese, Japanese, Arabic, Persian, random symbols,
+   decorative Unicode or fake-looking characters.
+4. If characters speak dialogue, their dialogue must be natural
+   spoken Hindi in Devanagari.
+5. NEVER invent a different language for character dialogue.
+6. If the story does not require dialogue, characters must NOT
+   randomly speak.
+7. Do not add random dialogue just to fill the scene.
+8. The story must be one continuous sequence of events.
+9. Every clip must naturally continue from the previous clip.
+10. Do not randomly change location, environment, weather or time.
+11. Do not randomly change character clothing.
+12. Do not randomly change important objects.
+13. Avoid unnecessary characters.
+14. Avoid unnecessary locations.
+15. Every clip must contain an action that can naturally happen
+    within exactly 8 seconds.
+16. Do not describe image prompts or video prompts.
+17. Do not add production instructions.
 
-Generated images और videos में कोई unnecessary written text नहीं होना चाहिए।
+VISUAL CONTINUITY:
 
-No:
-- subtitles
-- captions
-- random letters
-- random words
-- labels
-- posters
-- banners
-- watermarks
-- typography
-- random logos
-- signs containing readable text
+The same environment should remain visually consistent unless
+the story explicitly requires a location change.
 
-EXCEPTION:
-Ayant के black T-shirt पर explicitly requested white "AYANT"
-text allowed और permanently locked है।
+Important objects introduced in the story must remain the same
+objects throughout the story unless the story explicitly changes them.
 
-केवल final story दो।
-Scene prompts मत दो।
-Image prompts मत दो।
-Video prompts मत दो।
+Only explicitly required changes are allowed.
+
+Return ONLY the final Hindi story.
 """
 
     return openrouter_request(prompt)
 
 
 # =========================================================
-# STORY CONTINUITY + SCENE BREAKDOWN
+# MASTER CONTINUITY + SCENE STATE
 # =========================================================
 
 def generate_continuity_and_scenes(
@@ -418,21 +399,34 @@ def generate_continuity_and_scenes(
 ):
 
     prompt = f"""
-तुम AYANT Content AI के STRICT cinematic continuity director हो।
+You are AYANT Content AI's STRICT MASTER CONTINUITY DIRECTOR.
 
-STORY:
+Your job is NOT simply to divide the story into scenes.
+
+Your job is to create a MASTER CONTINUITY BIBLE and a precise
+scene-to-scene STATE TRANSFER system so that every generated
+image looks like the next moment of the SAME world.
+
+==================================================
+STORY
+==================================================
+
 {story}
 
-VIDEO DURATION:
+==================================================
+VIDEO SETTINGS
+==================================================
+
+DURATION:
 {duration}
 
-EXACT REQUIRED CLIP COUNT:
+EXACT CLIP COUNT:
 {expected_clips}
 
 EVERY CLIP:
 EXACTLY 8 SECONDS
 
-VISUAL STYLE:
+STYLE:
 {style}
 
 FORMAT:
@@ -441,208 +435,260 @@ FORMAT:
 USER CHARACTER LOCK:
 {character}
 
-PERMANENT AYANT CLOTHING LOCK:
+PERMANENT AYANT CLOTHING:
 {FIXED_AYANT_CLOTHING}
 
 
 ==================================================
-ABSOLUTE SCENE COUNT RULE
+ABSOLUTE COUNT
 ==================================================
 
-GENERATE EXACTLY {expected_clips} CLIPS/SCENES.
+Generate EXACTLY {expected_clips} scenes.
 
-NOT 3.
-NOT {expected_clips - 1}.
-NOT {expected_clips + 1}.
+No fewer.
+No more.
 
-EXACTLY {expected_clips} scenes only.
+Exactly {expected_clips}.
 
 
 ==================================================
-CHARACTER LOCK
+MASTER CHARACTER BIBLE
 ==================================================
 
-हर character का:
+For EVERY recurring character establish a permanent identity.
 
-- face
-- identity
-- age
+Lock:
+
+- face shape
+- facial features
+- eye shape
+- eye color
+- eyebrows
+- nose
+- lips
 - skin tone
+- age
+- height
 - body proportions
-- height/proportions
 - hairstyle
-- beard/moustache
+- beard
+- moustache
 - clothing
 - clothing colors
 - clothing design
 - shoes
 - accessories
 
-LOCKED रहेगा।
+Once established, these details MUST be repeated consistently.
 
-जब कोई character पहली बार दिखाई देता है,
-उसका complete visual identity और outfit establish करो।
+Never redesign a character between scenes.
 
-उसके बाद उस character के सभी later scenes में वही exact
-appearance और wardrobe maintain करो।
+Never randomly change:
 
-Character का look केवल तभी बदल सकता है जब USER STORY
-explicitly clothing/look change मांगती हो।
-
-AI अपनी तरफ से कोई wardrobe change नहीं करेगा।
-
-
-==================================================
-AYANT LOCK
-==================================================
-
-अगर Ayant scene में मौजूद है तो:
-
-- same face
-- same skin tone
-- same body proportions
-- same hairstyle
-- same beard/moustache
-- black T-shirt
-- white "AYANT" front text
-- white "AYANT" back text
-- black pants
-- white shoes
-
-हर scene और हर frame में exactly same रहेंगे।
+- face
+- hair
+- beard
+- body
+- clothes
+- shoes
+- accessories
 
 
 ==================================================
-LOCATION LOCK
+AYANT MASTER LOCK
 ==================================================
 
-हर location का canonical environment establish करो।
+Ayant MUST remain exactly:
 
-Location में बिना explicit story change के कोई बदलाव नहीं होगा।
+{character}
+
+AND:
+
+{FIXED_AYANT_CLOTHING}
+
+This applies to EVERY Start Frame, End Frame and video.
+
+No variation.
+
+
+==================================================
+MASTER LOCATION / BACKGROUND BIBLE
+==================================================
+
+For every location create an exact canonical environment description.
 
 Lock:
 
 - architecture
-- landscape
+- walls
+- doors
+- windows
+- floor
+- road
 - trees
+- plants
+- mountains
 - buildings
-- roads
-- ground
-- background
+- furniture
+- landscape
+- horizon
+- background structures
+- foreground structures
 - weather
 - atmosphere
+- season
 - time of day
-- lighting conditions
+- lighting direction
+- lighting intensity
+- shadows
+- color mood
 
-AI अपनी तरफ से नया location नहीं बनाएगा।
+IMPORTANT:
+
+Do NOT merely write "same background".
+
+Describe the exact background elements.
+
+Every later scene in the same location MUST use the SAME
+canonical background description.
+
+Do not replace trees.
+Do not replace buildings.
+Do not redesign architecture.
+Do not move the environment.
+Do not change weather.
+Do not change time of day.
+Do not change lighting.
+
+A location may change ONLY when the story explicitly changes location.
 
 
 ==================================================
-OBJECT LOCK
+MASTER OBJECT BIBLE
 ==================================================
 
-Important objects का:
+For EVERY important object establish:
 
-- appearance
-- size
-- shape
+- exact object identity
+- type
+- material
 - color
-- position
+- shape
+- size
+- visible details
+- condition
 - orientation
+- current holder
+- which hand
+- exact hand position
+- relationship to body
+- relationship to environment
 
-consistent रहेगा।
+Example:
 
-AI अपनी तरफ से नया important object add नहीं करेगा।
+If Ayant holds a red smartphone in his right hand,
+later scenes must explicitly describe THE SAME RED SMARTPHONE
+with the same shape, color, size and position in Ayant's
+right hand.
+
+Do NOT replace it with another phone.
+
+Do NOT change its color.
+
+Do NOT change its size.
+
+Do NOT make it disappear.
+
+Do NOT invent a second object.
+
+Objects can move ONLY when the story explicitly moves them.
 
 
 ==================================================
-POSITION / POSE LOCK
+MASTER POSE / STATE BIBLE
 ==================================================
 
-हर scene पिछले scene के END STATE से continue होगा।
-
-Carry forward:
+At the end of every scene record the exact state:
 
 - character position
 - body orientation
-- pose
-- hand placement
-- leg placement
-- facial expression
+- head direction
 - gaze direction
-- object positions
-- ongoing action state
+- facial expression
+- torso orientation
+- left hand position
+- right hand position
+- left leg position
+- right leg position
+- object position
+- object orientation
+- ongoing movement state
+
+This END STATE becomes the next scene's START STATE.
 
 
 ==================================================
-MOVEMENT LOCK
+END → START HARD LINK
 ==================================================
 
-Current scene में केवल वही movement/action होगा
-जो story में required है।
+This is ABSOLUTE.
 
-AI अपनी तरफ से:
+SCENE 1 END STATE
+MUST become
+SCENE 2 START STATE.
 
-- extra movement
-- extra action
-- random event
-- random camera movement
-- random character reaction
+SCENE 2 END STATE
+MUST become
+SCENE 3 START STATE.
 
-नहीं जोड़ेगा।
+Continue this for the entire story.
 
+The next scene is NOT a fresh image.
 
-==================================================
-START FRAME / END FRAME SYSTEM
-==================================================
-
-हर scene/clip में EXACTLY 2 images होंगी:
-
-1. START FRAME
-2. END FRAME
-
-इन दोनों images के बीच 1 video clip बनेगी।
-
-Scene N का END FRAME,
-Scene N+1 के START FRAME का exact continuity reference होगा।
-
-इसलिए:
-
-Scene 1 End
-↓
-Scene 2 Start
-
-Scene 2 End
-↓
-Scene 3 Start
-
-और इसी तरह पूरी story में continuity maintain करो।
+It is the exact next moment of the previous scene.
 
 
 ==================================================
-8 SECOND LOCK
+LANGUAGE / DIALOGUE LOCK
 ==================================================
 
-हर clip EXACTLY 8 SECONDS की होगी।
+If a character speaks:
 
-हर scene का action 8-second timeline में naturally fit होना चाहिए।
+- dialogue language = STANDARD HINDI
+- writing system = Devanagari
+- speech must sound like natural spoken Hindi
+- do NOT use Chinese
+- do NOT use Japanese
+- do NOT use Arabic
+- do NOT use random invented language
+- do NOT use gibberish
+- do NOT use fake words
+
+If there is NO dialogue in the story:
+
+The character must remain silent.
+
+Never invent dialogue.
+
+Dialogue must be explicitly specified in the scene.
 
 
 ==================================================
-VISUAL TEXT RULE
+VISUAL TEXT LOCK
 ==================================================
 
-Images/videos में कोई unnecessary text generate मत करो।
+Do NOT place written text inside generated visuals unless
+explicitly required.
 
-Do not add:
+No:
 
 - subtitles
 - captions
 - random letters
 - random words
-- labels
 - posters
 - banners
+- labels
 - watermarks
 - typography
 - random logos
@@ -650,69 +696,103 @@ Do not add:
 
 EXCEPTION:
 
-Ayant के T-shirt पर explicitly requested white "AYANT"
-text allowed है।
+Ayant's white "AYANT" T-shirt text is explicitly required
+and must remain locked.
 
 
 ==================================================
-VISUAL STYLE LOCK
+NO AI IMPROVISATION
 ==================================================
 
-पूरी story में:
+AI MUST NOT add:
 
-{style}
-
-maintain करो।
-
-FORMAT:
-
-{aspect_ratio}
+- new characters
+- new objects
+- new locations
+- new buildings
+- new trees
+- new animals
+- new events
+- new actions
+- new dialogue
+- random camera movements
+- random environmental changes
 
 
 ==================================================
-OUTPUT
+SCENE STRUCTURE
 ==================================================
 
-पहले:
+For each scene define:
 
-### STORY CONTINUITY LOCK
+SCENE NUMBER
 
-CHARACTERS:
+ACTION
+
+START STATE
+
+END STATE
+
+CHARACTER STATE
+
+LOCATION STATE
+
+BACKGROUND STATE
+
+OBJECT STATE
+
+DIALOGUE
+
+CAMERA
+
+CONTINUITY FROM PREVIOUS SCENE
+
+CONTINUITY TO NEXT SCENE
+
+
+==================================================
+OUTPUT FORMAT
+==================================================
+
+FIRST:
+
+### MASTER CONTINUITY BIBLE
+
+CHARACTER BIBLE:
 ...
 
-AYANT CLOTHING LOCK:
+AYANT LOCK:
 ...
 
-OTHER CHARACTER CLOTHING LOCK:
+OTHER CHARACTER CLOTHING:
 ...
 
-LOCATIONS:
+LOCATION BIBLE:
 ...
 
-IMPORTANT OBJECTS:
+BACKGROUND FINGERPRINT:
 ...
 
-TIME / WEATHER / LIGHTING:
+OBJECT BIBLE:
+...
+
+LANGUAGE / DIALOGUE LOCK:
 ...
 
 VISUAL STYLE:
+...
+
+FORMAT:
 ...
 
 CLIP COUNT:
 Exactly {expected_clips}
 
 CLIP DURATION:
-Exactly 8 seconds each
+Exactly 8 seconds
 
-FRAME SYSTEM:
-Start Frame + End Frame per clip
 
-CONTINUITY RULE:
-...
-
-फिर EXACTLY {expected_clips} scenes दो।
-
-हर scene:
+THEN:
 
 ### SCENE 1
 
@@ -722,35 +802,39 @@ EXACTLY 8 SECONDS
 ACTION:
 ...
 
-START FRAME:
+START STATE:
 ...
 
-END FRAME:
+END STATE:
 ...
 
-CHARACTER POSITION:
+CHARACTER STATE:
 ...
 
-EXPRESSION / GAZE:
+LOCATION STATE:
 ...
 
-LOCATION:
+BACKGROUND FINGERPRINT:
 ...
 
-OBJECTS:
+OBJECT STATE:
+...
+
+DIALOGUE:
 ...
 
 CAMERA:
 ...
 
-CONTINUITY FROM PREVIOUS SCENE:
+CONTINUITY TO NEXT SCENE:
 ...
 
-फिर Scene 2...
 
-और इसी तरह EXACTLY {expected_clips} scenes।
+Then Scene 2, Scene 3 and so on.
 
-कोई extra scene मत बनाओ।
+EXACTLY {expected_clips} scenes.
+
+No extra scenes.
 """
 
 
@@ -772,19 +856,38 @@ def generate_copyable_scene_prompts(
 ):
 
     prompt = f"""
-तुम AYANT Content AI के professional Google Flow prompt director हो।
+You are AYANT Content AI's FINAL GOOGLE FLOW PROMPT DIRECTOR.
 
-STORY:
+Your job is to convert the Master Continuity Bible and scene
+states into extremely strict image and image-to-video prompts.
+
+==================================================
+STORY
+==================================================
+
 {story}
 
-CONTINUITY + SCENE BREAKDOWN:
+==================================================
+MASTER CONTINUITY BIBLE + SCENE STATES
+==================================================
+
 {continuity_output}
 
-CHARACTER LOCK:
+==================================================
+USER CHARACTER
+==================================================
+
 {character}
 
-PERMANENT AYANT CLOTHING LOCK:
+==================================================
+AYANT CLOTHING
+==================================================
+
 {FIXED_AYANT_CLOTHING}
+
+==================================================
+SETTINGS
+==================================================
 
 STYLE:
 {style}
@@ -792,214 +895,204 @@ STYLE:
 FORMAT:
 {aspect_ratio}
 
-REQUIRED CLIPS:
-EXACTLY {expected_clips}
+EXACT CLIP COUNT:
+{expected_clips}
 
 EVERY CLIP:
 EXACTLY 8 SECONDS
 
 
 ==================================================
-ABSOLUTE COUNT RULE
+ABSOLUTE CONTINUITY RULE
 ==================================================
 
-Generate EXACTLY {expected_clips} scenes.
+EVERY IMAGE MUST BELONG TO THE SAME CONTINUOUS WORLD.
 
-Each scene = one video clip.
+Never treat a new scene as a completely new generation.
 
-Each scene MUST contain:
-
-1. START FRAME IMAGE PROMPT
-2. END FRAME IMAGE PROMPT
-3. ONE IMAGE-TO-VIDEO PROMPT
-
-Therefore total output must contain:
-
-{expected_clips} Start Frame image prompts
-+
-{expected_clips} End Frame image prompts
-+
-{expected_clips} video prompts.
+Use the Master Continuity Bible as the permanent source of truth.
 
 
 ==================================================
-CRITICAL CONTINUITY
+BACKGROUND FINGERPRINT LOCK
 ==================================================
 
-Scene 1 establishes the initial visual state.
+Whenever the story remains in the same location:
 
-For every next scene:
+REPEAT THE SAME CANONICAL BACKGROUND DETAILS.
 
-Scene N START FRAME must naturally continue
-from Scene N-1 END FRAME.
+Do NOT summarize them as:
 
-Do not reset the character.
-Do not reset the location.
-Do not reset objects.
-Do not reset pose.
-Do not reset clothing.
+"same background"
+"same environment"
+"same location"
 
-The next scene must feel like the exact next moment
-of the previous scene.
+Instead explicitly describe the same:
 
+- architecture
+- walls
+- doors
+- windows
+- roads
+- trees
+- buildings
+- ground
+- landscape
+- horizon
+- foreground
+- background
+- weather
+- atmosphere
+- time of day
+- lighting
+- shadows
 
-==================================================
-CHARACTER LOCK
-==================================================
+The visual environment must remain recognizable as the exact
+same physical place.
 
-Every character must maintain:
-
-- same face
-- same identity
-- same age
-- same skin tone
-- same body proportions
-- same hairstyle
-- same beard/moustache
-- same clothing
-- same clothing colors
-- same clothing design
-- same shoes
-- same accessories
-
-No character redesign.
-
-No face morphing.
-
-No body morphing.
-
-No hairstyle change.
-
-No wardrobe change unless explicitly required by the user story.
+Only explicitly requested story changes can modify it.
 
 
 ==================================================
-AYANT CLOTHING LOCK
+OBJECT FINGERPRINT LOCK
+==================================================
+
+Every recurring object must remain the SAME object.
+
+Repeat:
+
+- exact type
+- shape
+- color
+- material
+- size
+- visible details
+- orientation
+- holder
+- hand
+- position
+
+If an object is in the character's right hand at the previous
+End Frame, the next Start Frame must contain that SAME object
+in the same right hand unless the story explicitly moves it.
+
+Never replace an object with a visually different version.
+
+Never randomly remove an object.
+
+Never invent another version of the object.
+
+
+==================================================
+CHARACTER FINGERPRINT LOCK
+==================================================
+
+Every recurring character must retain:
+
+- exact face
+- skin tone
+- eyes
+- hair
+- beard
+- moustache
+- age
+- body proportions
+- height
+- clothes
+- clothing colors
+- shoes
+- accessories
+
+No redesign.
+
+No morphing.
+
+No wardrobe change.
+
+No facial change.
+
+
+==================================================
+AYANT LOCK
 ==================================================
 
 Whenever Ayant appears:
 
-BLACK T-SHIRT
-WHITE "AYANT" TEXT ON FRONT
-WHITE "AYANT" TEXT ON BACK
-BLACK PANTS
-WHITE SHOES
+- exact same face
+- exact same skin tone
+- exact same body proportions
+- exact same hairstyle
+- exact same beard and moustache
+- black T-shirt
+- white "AYANT" front text
+- white "AYANT" back text
+- black pants
+- white shoes
 
-These details MUST remain exactly identical
-in every Start Frame, End Frame and video clip.
-
-No clothing variation.
-No wardrobe change.
-No color change.
-No redesign.
-
-
-==================================================
-LOCATION LOCK
-==================================================
-
-Maintain exact:
-
-- environment
-- architecture
-- landscape
-- background
-- weather
-- time of day
-- lighting
-- atmosphere
-
-unless story explicitly changes location.
-
-No random location changes.
+These MUST remain identical in every image and video.
 
 
 ==================================================
-OBJECT LOCK
+END FRAME → NEXT START FRAME
 ==================================================
 
-Important objects must retain:
+THIS IS A HARD RULE.
 
-- same appearance
-- same size
-- same color
-- same shape
-- same position
-- same orientation
+Scene N END FRAME and Scene N+1 START FRAME must represent
+the SAME physical moment/state with only the minimum natural
+transition between them.
 
-unless the story explicitly moves them.
+The following MUST carry forward:
 
-
-==================================================
-POSITION / POSE / GAZE CONTINUITY
-==================================================
-
-Carry forward the previous End Frame state:
-
-- position
-- pose
+- character position
 - body orientation
+- head direction
+- gaze
+- facial expression
 - hand placement
 - leg placement
-- facial expression
-- gaze direction
-- object positions
-- ongoing movement state
+- object position
+- object orientation
+- background
+- lighting
+- weather
+- environment
 
-Only change what the current action explicitly requires.
-
-
-==================================================
-MOVEMENT LOCK
-==================================================
-
-Do not add:
-
-- new movement
-- new action
-- random reaction
-- random event
-- random camera movement
-- new character
-- new object
-- new location
+The next scene may change ONLY the action explicitly required
+by the story.
 
 
 ==================================================
-IMAGE PROMPT RULE
+DIALOGUE / LANGUAGE LOCK
 ==================================================
 
-Each image prompt must describe the COMPLETE visual state
-required for that frame.
+If the scene contains dialogue:
 
-The Start Frame and End Frame must look like two
-consistent moments of the SAME scene.
+The character MUST speak ONLY natural STANDARD HINDI.
 
-Do not create unrelated images.
+Dialogue must be written in Devanagari.
 
+No other language.
 
-==================================================
-IMAGE-TO-VIDEO RULE
-==================================================
+No invented language.
 
-Animate ONLY the existing Start Frame toward the End Frame.
+No gibberish.
 
-Do not introduce anything that is not already established.
+No random syllables.
 
-No:
+No Chinese/Japanese/Arabic/Persian text.
 
-- character morphing
-- face changing
-- clothing changing
-- body changing
-- object morphing
-- location changing
-- random new elements
-- random camera movement
+Do NOT invent dialogue if none exists.
+
+The video prompt must explicitly state:
+
+"Any spoken dialogue must be natural standard Hindi only,
+with accurate Hindi pronunciation. No other language and no
+gibberish speech."
 
 
 ==================================================
-VISUAL TEXT RULE
+VISUAL TEXT LOCK
 ==================================================
 
 Do NOT generate:
@@ -1019,24 +1112,108 @@ Do NOT generate:
 
 EXCEPTION:
 
-Ayant's explicitly requested white "AYANT" T-shirt text
-is allowed and must remain locked.
+Ayant's explicitly requested white "AYANT" T-shirt text.
 
 
 ==================================================
-GOOGLE FLOW
+NO IMPROVISATION
 ==================================================
 
-All IMAGE PROMPTS and IMAGE-TO-VIDEO PROMPTS
-must be written in English.
+Do NOT add:
 
-Every video prompt MUST explicitly contain:
+- new characters
+- new objects
+- new locations
+- new background elements
+- new animals
+- new events
+- new actions
+- new dialogue
+- random camera movement
+
+Only execute the explicitly defined scene action.
+
+
+==================================================
+START FRAME IMAGE PROMPT
+==================================================
+
+The Start Frame prompt must describe the COMPLETE visual state.
+
+It must include:
+
+- character identity
+- exact appearance
+- exact clothing
+- exact pose
+- exact position
+- exact gaze
+- exact expression
+- exact objects
+- exact object positions
+- exact location
+- exact background
+- exact lighting
+- exact weather
+- exact style
+- exact format
+
+It must be a direct continuation of the previous End Frame.
+
+
+==================================================
+END FRAME IMAGE PROMPT
+==================================================
+
+The End Frame must be the natural next state after the scene's
+explicit action.
+
+Do NOT redesign anything.
+
+Change ONLY what the action requires.
+
+Everything else stays locked.
+
+
+==================================================
+IMAGE-TO-VIDEO
+==================================================
+
+Animate the Start Frame naturally toward the End Frame.
+
+Do NOT regenerate the world.
+
+Do NOT redesign the character.
+
+Do NOT change clothing.
+
+Do NOT change objects.
+
+Do NOT change the background.
+
+Do NOT add characters.
+
+Do NOT add objects.
+
+Do NOT add events.
+
+Do NOT add random camera movement.
+
+The animation must look like one continuous 8-second shot.
+
+The prompt MUST contain:
 
 Duration: exactly 8 seconds.
 
+And:
+
+Any spoken dialogue must be natural standard Hindi only,
+with accurate Hindi pronunciation. No other language and no
+gibberish speech.
+
 
 ==================================================
-EXACT OUTPUT FORMAT
+EXACT OUTPUT
 ==================================================
 
 SCENE_START
@@ -1057,14 +1234,9 @@ IMAGE_TO_VIDEO_PROMPT:
 
 SCENE_END
 
+Repeat until EXACTLY {expected_clips} scenes.
 
-Then Scene 2.
-
-Continue until exactly {expected_clips} scenes.
-
-DO NOT generate fewer scenes.
-DO NOT generate more scenes.
-DO NOT add explanations.
+NO EXTRA EXPLANATION.
 """
 
 
@@ -1248,12 +1420,12 @@ if st.button(
 
 
             # =================================================
-            # CONTINUITY
+            # MASTER CONTINUITY
             # =================================================
 
             with st.spinner(
-                "🔒 Characters, Clothing, Location, Objects और "
-                "Scene Continuity तैयार हो रही है..."
+                "🔒 Master Continuity Bible + Character + Background + "
+                "Objects + End→Start State तैयार हो रहा है..."
             ):
 
                 continuity_output, continuity_error = (
@@ -1277,7 +1449,7 @@ if st.button(
             else:
 
                 st.markdown(
-                    "## 🔒 STORY CONTINUITY + SCENE BREAKDOWN"
+                    "## 🔒 MASTER CONTINUITY + SCENE STATE"
                 )
 
                 st.write(
@@ -1290,7 +1462,7 @@ if st.button(
                 # =================================================
 
                 with st.spinner(
-                    "🎨 Start Frame, End Frame और "
+                    "🎨 Locked Start Frame, End Frame और "
                     "Image-to-Video prompts बनाए जा रहे हैं..."
                 ):
 
@@ -1321,7 +1493,7 @@ if st.button(
 
 
                     st.markdown(
-                        "## 🎬 GOOGLE FLOW — COPYABLE PROMPTS"
+                        "## 🎬 GOOGLE FLOW — LOCKED COPYABLE PROMPTS"
                     )
 
 
@@ -1342,8 +1514,9 @@ if st.button(
 
                         st.success(
                             f"✅ EXACTLY {expected_clips} clips तैयार हैं | "
-                            f"🖼️ EXACTLY {expected_images} images के prompts | "
-                            f"🎥 {expected_clips} video prompts"
+                            f"🖼️ EXACTLY {expected_images} images | "
+                            f"🎥 {expected_clips} video prompts | "
+                            "🔒 Continuity Lock Active"
                         )
 
 
@@ -1359,7 +1532,8 @@ if st.button(
 
                         st.caption(
                             "Duration: EXACTLY 8 SECONDS | "
-                            "2 Images: Start Frame + End Frame"
+                            "Start Frame → End Frame → Video | "
+                            "🔒 Previous End State → Current Start State"
                         )
 
 
@@ -1419,5 +1593,7 @@ if st.button(
                             f"{expected_clips} clips × 2 images = "
                             f"{expected_images} images और "
                             f"{expected_clips} Image-to-Video prompts "
-                            "Google Flow के लिए तैयार हैं।"
+                            "Google Flow के लिए तैयार हैं। "
+                            "Character, Background, Objects, Pose और "
+                            "Hindi Dialogue continuity locks applied."
                         )
