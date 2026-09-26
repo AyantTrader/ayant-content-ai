@@ -2,6 +2,10 @@ import streamlit as st
 import requests
 import re
 import html
+import json
+import os
+import uuid
+from datetime import datetime
 
 
 # =========================================================
@@ -50,6 +54,116 @@ st.markdown(
 
 
 # =========================================================
+# PERSISTENT WORKFLOW STORAGE
+# =========================================================
+
+WORKFLOW_DIR = "workflow_data"
+
+os.makedirs(
+    WORKFLOW_DIR,
+    exist_ok=True
+)
+
+
+def get_workflow_id():
+
+    workflow_id = st.query_params.get("workflow")
+
+    if workflow_id:
+        return workflow_id
+
+    workflow_id = str(
+        uuid.uuid4()
+    )
+
+    st.query_params["workflow"] = workflow_id
+
+    return workflow_id
+
+
+WORKFLOW_ID = get_workflow_id()
+
+WORKFLOW_FILE = os.path.join(
+    WORKFLOW_DIR,
+    f"{WORKFLOW_ID}.json"
+)
+
+
+def load_workflow():
+
+    if not os.path.exists(WORKFLOW_FILE):
+        return {}
+
+    try:
+
+        with open(
+            WORKFLOW_FILE,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            return json.load(f)
+
+    except Exception:
+
+        return {}
+
+
+def save_workflow(data):
+
+    try:
+
+        data["last_saved"] = datetime.now().isoformat()
+
+        temp_file = (
+            WORKFLOW_FILE
+            + ".tmp"
+        )
+
+        with open(
+            temp_file,
+            "w",
+            encoding="utf-8"
+        ) as f:
+
+            json.dump(
+                data,
+                f,
+                ensure_ascii=False,
+                indent=2
+            )
+
+        os.replace(
+            temp_file,
+            WORKFLOW_FILE
+        )
+
+        return True
+
+    except Exception:
+
+        return False
+
+
+def clear_current_workflow():
+
+    try:
+
+        if os.path.exists(WORKFLOW_FILE):
+
+            os.remove(
+                WORKFLOW_FILE
+            )
+
+    except Exception:
+
+        pass
+
+
+workflow = load_workflow()
+
+
+# =========================================================
 # APP HEADER
 # =========================================================
 
@@ -64,13 +178,62 @@ st.divider()
 
 
 # =========================================================
+# NEW STORY BUTTON
+# =========================================================
+
+if st.button(
+    "🆕 नई Story शुरू करो"
+):
+
+    clear_current_workflow()
+
+    new_workflow_id = str(
+        uuid.uuid4()
+    )
+
+    st.query_params["workflow"] = (
+        new_workflow_id
+    )
+
+    st.rerun()
+
+
+# =========================================================
+# RESTORED WORKFLOW STATUS
+# =========================================================
+
+if workflow:
+
+    st.success(
+        "🔄 Saved workflow मिला है। "
+        "Refresh के बाद completed stages restore कर दिए गए हैं।"
+    )
+
+    if workflow.get("last_saved"):
+
+        st.caption(
+            f"Last saved: {workflow['last_saved']}"
+        )
+
+
+# =========================================================
 # VIDEO INPUT
 # =========================================================
 
-st.subheader("📝 अपनी कहानी या वीडियो आइडिया लिखो")
+st.subheader(
+    "📝 अपनी कहानी या वीडियो आइडिया लिखो"
+)
+
+
+saved_idea = workflow.get(
+    "idea",
+    ""
+)
+
 
 idea = st.text_area(
     "Video idea",
+    value=saved_idea,
     placeholder="उदाहरण: Ayant 5000 साल पीछे Dwapar Yuga में चला जाता है...",
     height=180
 )
@@ -82,41 +245,84 @@ idea = st.text_area(
 
 col1, col2, col3 = st.columns(3)
 
+
 with col1:
+
+    duration_options = [
+        "30 सेकंड",
+        "60 सेकंड",
+        "90 सेकंड",
+        "2 मिनट"
+    ]
+
+    saved_duration = workflow.get(
+        "duration",
+        duration_options[0]
+    )
+
+    if saved_duration not in duration_options:
+
+        saved_duration = duration_options[0]
 
     duration = st.selectbox(
         "वीडियो duration",
-        [
-            "30 सेकंड",
-            "60 सेकंड",
-            "90 सेकंड",
-            "2 मिनट"
-        ]
+        duration_options,
+        index=duration_options.index(
+            saved_duration
+        )
     )
 
 
 with col2:
 
+    style_options = [
+        "Cinematic Semi-Realistic 3D",
+        "Realistic Cinematic",
+        "3D Animated",
+        "Epic Historical"
+    ]
+
+    saved_style = workflow.get(
+        "style",
+        style_options[0]
+    )
+
+    if saved_style not in style_options:
+
+        saved_style = style_options[0]
+
     style = st.selectbox(
         "Visual Style",
-        [
-            "Cinematic Semi-Realistic 3D",
-            "Realistic Cinematic",
-            "3D Animated",
-            "Epic Historical"
-        ]
+        style_options,
+        index=style_options.index(
+            saved_style
+        )
     )
 
 
 with col3:
 
+    aspect_options = [
+        "9:16 Vertical",
+        "16:9 Horizontal",
+        "1:1 Square"
+    ]
+
+    saved_aspect = workflow.get(
+        "aspect_ratio",
+        aspect_options[0]
+    )
+
+    if saved_aspect not in aspect_options:
+
+        saved_aspect = aspect_options[0]
+
     aspect_ratio = st.selectbox(
         "Format",
-        [
-            "9:16 Vertical",
-            "16:9 Horizontal",
-            "1:1 Square"
-        ]
+        aspect_options,
+        index=aspect_options.index(
+            saved_aspect
+        )
     )
 
 
@@ -148,8 +354,13 @@ DURATION_CONFIG = {
 }
 
 
-expected_clips = DURATION_CONFIG[duration]["clips"]
-expected_images = DURATION_CONFIG[duration]["images"]
+expected_clips = DURATION_CONFIG[
+    duration
+]["clips"]
+
+expected_images = DURATION_CONFIG[
+    duration
+]["images"]
 
 
 st.info(
@@ -198,17 +409,43 @@ No removed clothing.
 # CHARACTER LOCK INPUT
 # =========================================================
 
-st.subheader("🔒 Character Lock")
+st.subheader(
+    "🔒 Character Lock"
+)
 
-character = st.text_area(
-    "अगर कोई मुख्य character है तो उसकी fixed appearance यहाँ लिखो",
-    value=(
+
+saved_character = workflow.get(
+    "character",
+    (
         "Ayant: young Indian male, wheatish skin, brown eyes, "
         "short trimmed beard and moustache, black hair tied in a high "
         "man-bun/top-knot, consistent face, body proportions and "
         "appearance across all scenes."
-    ),
+    )
+)
+
+
+character = st.text_area(
+    "अगर कोई मुख्य character है तो उसकी fixed appearance यहाँ लिखो",
+    value=saved_character,
     height=120
+)
+
+
+# =========================================================
+# AUTO SAVE BASIC INPUTS
+# =========================================================
+
+workflow["idea"] = idea
+workflow["duration"] = duration
+workflow["style"] = style
+workflow["aspect_ratio"] = aspect_ratio
+workflow["character"] = character
+workflow["expected_clips"] = expected_clips
+workflow["expected_images"] = expected_images
+
+save_workflow(
+    workflow
 )
 
 
@@ -230,7 +467,9 @@ st.info(
 
 def openrouter_request(prompt):
 
-    api_key = st.secrets.get("OPENROUTER_API_KEY")
+    api_key = st.secrets.get(
+        "OPENROUTER_API_KEY"
+    )
 
     if not api_key:
 
@@ -292,7 +531,13 @@ def openrouter_request(prompt):
 
         data = response.json()
 
-        result = data["choices"][0]["message"]["content"]
+        result = data[
+            "choices"
+        ][0][
+            "message"
+        ][
+            "content"
+        ]
 
         return result.strip(), None
 
@@ -388,7 +633,9 @@ Ayant's white "AYANT" clothing text is explicitly required.
 Return ONLY the final Hindi story.
 """
 
-    return openrouter_request(prompt)
+    return openrouter_request(
+        prompt
+    )
 
 
 # =========================================================
@@ -448,7 +695,6 @@ CHARACTER:
 AYANT CLOTHING:
 {FIXED_AYANT_CLOTHING}
 
-
 ==================================================
 MASTER REFERENCE
 ==================================================
@@ -477,7 +723,6 @@ The Master Reference is the permanent visual identity source.
 
 Do NOT redesign these elements later.
 
-
 ==================================================
 CHARACTER BIBLE
 ==================================================
@@ -505,7 +750,6 @@ For every recurring character lock:
 
 Once established, NEVER redesign them.
 
-
 ==================================================
 AYANT LOCK
 ==================================================
@@ -519,7 +763,6 @@ AND:
 {FIXED_AYANT_CLOTHING}
 
 No variation.
-
 
 ==================================================
 LOCATION BIBLE
@@ -558,7 +801,6 @@ Give exact visual details.
 A location may change ONLY when the story explicitly moves
 to another location.
 
-
 ==================================================
 OBJECT BIBLE
 ==================================================
@@ -581,7 +823,6 @@ Never replace an established object with another object.
 Never randomly remove an object.
 
 Never invent another copy.
-
 
 ==================================================
 REAL FRAME CHAIN
@@ -607,7 +848,6 @@ CLIP_3_END
 ↓
 continue until final clip
 
-
 RULE:
 
 Clip N Start Frame MUST use the ACTUAL generated Clip N-1
@@ -619,7 +859,6 @@ Frame as its PRIMARY visual reference.
 Only the explicitly required action may change.
 
 Everything else remains visually inherited.
-
 
 ==================================================
 POSE / STATE TRANSFER
@@ -643,7 +882,6 @@ The End State of each frame must define:
 
 The next frame inherits this state.
 
-
 ==================================================
 NO RANDOM CHANGES
 ==================================================
@@ -662,7 +900,6 @@ Never add:
 - random camera movement
 - random lighting change
 - random weather change
-
 
 ==================================================
 VISUAL TEXT
@@ -685,7 +922,6 @@ EXCEPTION:
 
 Ayant's explicitly required white "AYANT" shirt text.
 
-
 ==================================================
 DIALOGUE
 ==================================================
@@ -701,7 +937,6 @@ If dialogue exists:
 If there is no dialogue:
 
 DIALOGUE = NONE
-
 
 ==================================================
 OUTPUT
@@ -740,7 +975,6 @@ Exactly {expected_clips}
 
 CLIP DURATION:
 Exactly 8 seconds
-
 
 THEN FOR EACH SCENE:
 
@@ -794,7 +1028,9 @@ For every scene explicitly state its reference source.
 NO EXTRA SCENES.
 """
 
-    return openrouter_request(prompt)
+    return openrouter_request(
+        prompt
+    )
 
 
 # =========================================================
@@ -863,7 +1099,6 @@ EXACT CLIPS:
 EVERY CLIP:
 EXACTLY 8 SECONDS
 
-
 ==================================================
 ABSOLUTE REFERENCE RULE
 ==================================================
@@ -875,7 +1110,6 @@ reference.
 
 The text prompt describes ONLY what must remain identical and
 what small action/state change must happen.
-
 
 ==================================================
 REFERENCE CHAIN
@@ -910,7 +1144,6 @@ Continue exactly like this.
 This reference chain MUST be explicitly written inside every
 prompt.
 
-
 ==================================================
 REFERENCE IMAGE INSTRUCTION
 ==================================================
@@ -925,7 +1158,6 @@ camera perspective and composition from that reference."
 Then specify ONLY the required change.
 
 Never ask the image model to redesign the scene.
-
 
 ==================================================
 CHARACTER LOCK
@@ -951,7 +1183,6 @@ No face redesign.
 No body redesign.
 No wardrobe change.
 
-
 ==================================================
 AYANT LOCK
 ==================================================
@@ -970,7 +1201,6 @@ Whenever Ayant appears:
 - white shoes
 
 No variation.
-
 
 ==================================================
 LOCATION LOCK
@@ -998,7 +1228,6 @@ Preserve the exact physical environment from the reference:
 
 Do NOT create a new interpretation of the location.
 
-
 ==================================================
 OBJECT LOCK
 ==================================================
@@ -1017,7 +1246,6 @@ Preserve every important object exactly:
 
 Only explicitly required object movement is allowed.
 
-
 ==================================================
 POSE LOCK
 ==================================================
@@ -1034,7 +1262,6 @@ Carry forward:
 - object positions
 
 Only the current scene's explicitly required action can change.
-
 
 ==================================================
 NO VISUAL TEXT
@@ -1058,7 +1285,6 @@ EXCEPTION:
 
 The explicitly required "AYANT" text on Ayant's T-shirt.
 
-
 ==================================================
 NO AI IMPROVISATION
 ==================================================
@@ -1078,7 +1304,6 @@ Do NOT add:
 
 unless explicitly required.
 
-
 ==================================================
 START FRAME
 ==================================================
@@ -1094,7 +1319,6 @@ The prompt must say:
 3. What exact state is required.
 4. What tiny change, if any, is required.
 
-
 ==================================================
 END FRAME
 ==================================================
@@ -1105,7 +1329,6 @@ It represents the exact next visual state after the defined
 8-second action.
 
 Do not redesign anything.
-
 
 ==================================================
 IMAGE TO VIDEO
@@ -1135,7 +1358,6 @@ If dialogue exists:
 with accurate Hindi pronunciation. No other language and no
 gibberish speech."
 
-
 ==================================================
 EXACT OUTPUT FORMAT
 ==================================================
@@ -1162,36 +1384,14 @@ IMAGE_TO_VIDEO_PROMPT:
 
 SCENE_END
 
-
-SCENE_START
-
-SCENE_NUMBER: 2
-
-REFERENCE_CHAIN:
-START_FRAME_REFERENCE: ACTUAL SCENE 1 END FRAME
-END_FRAME_REFERENCE: ACTUAL SCENE 2 START FRAME
-
-DURATION:
-EXACTLY 8 SECONDS
-
-START_FRAME_IMAGE_PROMPT:
-[complete English prompt]
-
-END_FRAME_IMAGE_PROMPT:
-[complete English prompt]
-
-IMAGE_TO_VIDEO_PROMPT:
-[complete English prompt]
-
-SCENE_END
-
 Continue exactly until Scene {expected_clips}.
 
 NO EXTRA EXPLANATION.
 """
 
-
-    return openrouter_request(prompt)
+    return openrouter_request(
+        prompt
+    )
 
 
 # =========================================================
@@ -1275,7 +1475,239 @@ def parse_scenes(text):
 
 
 # =========================================================
-# MAIN WORKFLOW
+# DISPLAY SAVED STORY
+# =========================================================
+
+def display_story(story):
+
+    st.markdown(
+        "## 📖 AI GENERATED STORY"
+    )
+
+    safe_story = html.escape(
+        story
+    ).replace(
+        "\n",
+        "<br>"
+    )
+
+    st.markdown(
+        f"""
+        <div class="hindi-story">
+            {safe_story}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# =========================================================
+# DISPLAY CONTINUITY
+# =========================================================
+
+def display_continuity(
+    continuity_output
+):
+
+    st.markdown(
+        "## 🔒 MASTER CONTINUITY + REFERENCE CHAIN"
+    )
+
+    st.write(
+        continuity_output
+    )
+
+
+# =========================================================
+# DISPLAY FINAL SCENES
+# =========================================================
+
+def display_final_scenes(
+    scene_output,
+    expected_clips,
+    expected_images
+):
+
+    scenes = parse_scenes(
+        scene_output
+    )
+
+    st.markdown(
+        "## 🎬 GOOGLE FLOW — REAL REFERENCE CHAIN"
+    )
+
+    st.warning(
+        "⚠️ IMPORTANT: अब हर अगली image को नई independent "
+        "image की तरह generate मत करना। जिस frame को "
+        "REFERENCE IMAGE लिखा है, उसी actual generated "
+        "image को Google Flow में reference के रूप में "
+        "देना है। यही visual continuity का मुख्य हिस्सा है।"
+    )
+
+    st.markdown(
+        "## 🧬 STEP 0 — MASTER REFERENCE IMAGE"
+    )
+
+    st.write(
+        "सबसे पहले Master Reference Image generate करो। "
+        "यही Ayant + location + objects की visual identity "
+        "का base होगा।"
+    )
+
+    st.info(
+        "Master Reference को save करके रखो। "
+        "Clip 1 Start Frame बनाते समय यही reference रहेगा।"
+    )
+
+    if len(scenes) != expected_clips:
+
+        st.warning(
+            f"⚠️ AI ने {expected_clips} scenes की जगह "
+            f"{len(scenes)} scenes read किए। "
+            f"Workflow को दोबारा START करना बेहतर रहेगा।"
+        )
+
+        return
+
+    st.success(
+        f"✅ EXACTLY {expected_clips} clips तैयार हैं | "
+        f"🖼️ EXACTLY {expected_images} images | "
+        f"🎥 {expected_clips} video prompts | "
+        "🔗 Real Reference Chain Ready"
+    )
+
+    for scene in scenes:
+
+        st.markdown(
+            f"## 🎬 CLIP / SCENE {scene['number']}"
+        )
+
+        st.caption(
+            "Duration: EXACTLY 8 SECONDS | "
+            "Actual Reference → Start Frame → End Frame → Video"
+        )
+
+        st.markdown(
+            "### 🔗 REFERENCE CHAIN"
+        )
+
+        st.code(
+            scene["reference_chain"],
+            language="text"
+        )
+
+        st.markdown(
+            "### 🟢 START FRAME — IMAGE PROMPT"
+        )
+
+        st.code(
+            scene["start_frame_prompt"],
+            language="text"
+        )
+
+        st.markdown(
+            "### 🔴 END FRAME — IMAGE PROMPT"
+        )
+
+        st.code(
+            scene["end_frame_prompt"],
+            language="text"
+        )
+
+        st.markdown(
+            "### 🎥 IMAGE-TO-VIDEO PROMPT"
+        )
+
+        st.code(
+            scene["video_prompt"],
+            language="text"
+        )
+
+        st.divider()
+
+    st.success(
+        "🎉 Workflow complete! "
+        f"{expected_clips} clips × 2 images = "
+        f"{expected_images} images और "
+        f"{expected_clips} Image-to-Video prompts "
+        "Google Flow के लिए तैयार हैं। "
+        "Reference Chain: "
+        "Previous Actual Frame → Next Frame."
+    )
+
+
+# =========================================================
+# RESTORE COMPLETED WORKFLOW
+# =========================================================
+
+if workflow.get(
+    "workflow_started"
+):
+
+    # -----------------------------------------------------
+    # RESTORE STORY
+    # -----------------------------------------------------
+
+    if workflow.get(
+        "story_complete"
+    ):
+
+        generated_story = workflow.get(
+            "generated_story",
+            ""
+        )
+
+        if generated_story:
+
+            display_story(
+                generated_story
+            )
+
+
+    # -----------------------------------------------------
+    # RESTORE CONTINUITY
+    # -----------------------------------------------------
+
+    if workflow.get(
+        "continuity_complete"
+    ):
+
+        continuity_output = workflow.get(
+            "continuity_output",
+            ""
+        )
+
+        if continuity_output:
+
+            display_continuity(
+                continuity_output
+            )
+
+
+    # -----------------------------------------------------
+    # RESTORE FINAL PROMPTS
+    # -----------------------------------------------------
+
+    if workflow.get(
+        "prompts_complete"
+    ):
+
+        scene_output = workflow.get(
+            "scene_output",
+            ""
+        )
+
+        if scene_output:
+
+            display_final_scenes(
+                scene_output,
+                expected_clips,
+                expected_images
+            )
+
+
+# =========================================================
+# MAIN WORKFLOW BUTTON
 # =========================================================
 
 if st.button(
@@ -1290,6 +1722,25 @@ if st.button(
         )
 
     else:
+
+        # =================================================
+        # SAVE WORKFLOW START
+        # =================================================
+
+        workflow["workflow_started"] = True
+
+        workflow["idea"] = idea
+        workflow["duration"] = duration
+        workflow["style"] = style
+        workflow["aspect_ratio"] = aspect_ratio
+        workflow["character"] = character
+        workflow["expected_clips"] = expected_clips
+        workflow["expected_images"] = expected_images
+
+        save_workflow(
+            workflow
+        )
+
 
         st.success(
             "Content workflow शुरू हो गया!"
@@ -1342,54 +1793,97 @@ if st.button(
         # STORY
         # =================================================
 
-        with st.spinner(
-            "🤖 AI तुम्हारी continuous Hindi story लिख रहा है..."
+        if workflow.get(
+            "story_complete"
+        ) and workflow.get(
+            "generated_story"
         ):
 
-            generated_story, story_error = (
-                generate_ai_story(
-                    idea,
-                    duration,
-                    style,
-                    aspect_ratio,
-                    character,
-                    expected_clips
-                )
+            generated_story = workflow[
+                "generated_story"
+            ]
+
+            st.info(
+                "📦 Saved Story already available — "
+                "AI को दोबारा Story generate नहीं करवाई जा रही।"
             )
 
-
-        if story_error:
-
-            st.error(
-                story_error
+            display_story(
+                generated_story
             )
 
         else:
 
-            st.markdown(
-                "## 📖 AI GENERATED STORY"
+            with st.spinner(
+                "🤖 AI तुम्हारी continuous Hindi story लिख रहा है..."
+            ):
+
+                generated_story, story_error = (
+                    generate_ai_story(
+                        idea,
+                        duration,
+                        style,
+                        aspect_ratio,
+                        character,
+                        expected_clips
+                    )
+                )
+
+
+            if story_error:
+
+                st.error(
+                    story_error
+                )
+
+                st.stop()
+
+
+            workflow[
+                "generated_story"
+            ] = generated_story
+
+            workflow[
+                "story_complete"
+            ] = True
+
+            save_workflow(
+                workflow
             )
 
-            safe_story = html.escape(
+            st.success(
+                "💾 Story successfully saved."
+            )
+
+            display_story(
                 generated_story
-            ).replace(
-                "\n",
-                "<br>"
-            )
-
-            st.markdown(
-                f"""
-                <div class="hindi-story">
-                    {safe_story}
-                </div>
-                """,
-                unsafe_allow_html=True
             )
 
 
-            # =================================================
-            # MASTER CONTINUITY
-            # =================================================
+        # =================================================
+        # MASTER CONTINUITY
+        # =================================================
+
+        if workflow.get(
+            "continuity_complete"
+        ) and workflow.get(
+            "continuity_output"
+        ):
+
+            continuity_output = workflow[
+                "continuity_output"
+            ]
+
+            st.info(
+                "📦 Saved Master Continuity already available — "
+                "AI को दोबारा generate नहीं करवाया जा रहा।"
+            )
+
+            display_continuity(
+                continuity_output
+            )
+
+        else:
 
             with st.spinner(
                 "🔒 Master Reference + Character + Location + "
@@ -1414,200 +1908,112 @@ if st.button(
                     continuity_error
                 )
 
-            else:
+                st.stop()
 
-                st.markdown(
-                    "## 🔒 MASTER CONTINUITY + REFERENCE CHAIN"
+
+            workflow[
+                "continuity_output"
+            ] = continuity_output
+
+            workflow[
+                "continuity_complete"
+            ] = True
+
+            save_workflow(
+                workflow
+            )
+
+            st.success(
+                "💾 Master Continuity successfully saved."
+            )
+
+            display_continuity(
+                continuity_output
+            )
+
+
+        # =================================================
+        # FINAL PROMPTS
+        # =================================================
+
+        if workflow.get(
+            "prompts_complete"
+        ) and workflow.get(
+            "scene_output"
+        ):
+
+            scene_output = workflow[
+                "scene_output"
+            ]
+
+            st.info(
+                "📦 Saved Google Flow prompts already available — "
+                "AI को दोबारा generate नहीं करवाया जा रहा।"
+            )
+
+            display_final_scenes(
+                scene_output,
+                expected_clips,
+                expected_images
+            )
+
+        else:
+
+            with st.spinner(
+                "🎨 Actual Reference Chain आधारित Google Flow "
+                "prompts बनाए जा रहे हैं..."
+            ):
+
+                scene_output, scene_error = (
+                    generate_copyable_scene_prompts(
+                        generated_story,
+                        continuity_output,
+                        duration,
+                        style,
+                        aspect_ratio,
+                        character,
+                        expected_clips
+                    )
                 )
 
-                st.write(
-                    continuity_output
+
+            if scene_error:
+
+                st.error(
+                    scene_error
                 )
 
-
-                # =================================================
-                # FINAL PROMPTS
-                # =================================================
-
-                with st.spinner(
-                    "🎨 Actual Reference Chain आधारित Google Flow "
-                    "prompts बनाए जा रहे हैं..."
-                ):
-
-                    scene_output, scene_error = (
-                        generate_copyable_scene_prompts(
-                            generated_story,
-                            continuity_output,
-                            duration,
-                            style,
-                            aspect_ratio,
-                            character,
-                            expected_clips
-                        )
-                    )
+                st.stop()
 
 
-                if scene_error:
+            workflow[
+                "scene_output"
+            ] = scene_output
 
-                    st.error(
-                        scene_error
-                    )
+            workflow[
+                "prompts_complete"
+            ] = True
 
-                else:
+            scenes = parse_scenes(
+                scene_output
+            )
 
-                    scenes = parse_scenes(
-                        scene_output
-                    )
+            if len(scenes) == expected_clips:
 
+                workflow[
+                    "workflow_complete"
+                ] = True
 
-                    st.markdown(
-                        "## 🎬 GOOGLE FLOW — REAL REFERENCE CHAIN"
-                    )
+            save_workflow(
+                workflow
+            )
 
+            st.success(
+                "💾 Final Google Flow prompts successfully saved."
+            )
 
-                    # =================================================
-                    # IMPORTANT USER INSTRUCTION
-                    # =================================================
-
-                    st.warning(
-                        "⚠️ IMPORTANT: अब हर अगली image को नई independent "
-                        "image की तरह generate मत करना। जिस frame को "
-                        "REFERENCE IMAGE लिखा है, उसी actual generated "
-                        "image को Google Flow में reference के रूप में "
-                        "देना है। यही visual continuity का मुख्य हिस्सा है।"
-                    )
-
-
-                    # =================================================
-                    # MASTER REFERENCE
-                    # =================================================
-
-                    st.markdown(
-                        "## 🧬 STEP 0 — MASTER REFERENCE IMAGE"
-                    )
-
-                    st.write(
-                        "सबसे पहले Master Reference Image generate करो। "
-                        "यही Ayant + location + objects की visual identity "
-                        "का base होगा।"
-                    )
-
-                    st.info(
-                        "Master Reference को save करके रखो। "
-                        "Clip 1 Start Frame बनाते समय यही reference रहेगा।"
-                    )
-
-
-                    # =================================================
-                    # COUNT VALIDATION
-                    # =================================================
-
-                    if len(scenes) != expected_clips:
-
-                        st.warning(
-                            f"⚠️ AI ने {expected_clips} scenes की जगह "
-                            f"{len(scenes)} scenes read किए। "
-                            f"Workflow को दोबारा START करना बेहतर रहेगा।"
-                        )
-
-
-                    else:
-
-                        st.success(
-                            f"✅ EXACTLY {expected_clips} clips तैयार हैं | "
-                            f"🖼️ EXACTLY {expected_images} images | "
-                            f"🎥 {expected_clips} video prompts | "
-                            "🔗 Real Reference Chain Ready"
-                        )
-
-
-                    # =================================================
-                    # DISPLAY EACH SCENE
-                    # =================================================
-
-                    for scene in scenes:
-
-                        st.markdown(
-                            f"## 🎬 CLIP / SCENE {scene['number']}"
-                        )
-
-                        st.caption(
-                            "Duration: EXACTLY 8 SECONDS | "
-                            "Actual Reference → Start Frame → End Frame → Video"
-                        )
-
-
-                        # ---------------------------------------------
-                        # REFERENCE CHAIN
-                        # ---------------------------------------------
-
-                        st.markdown(
-                            "### 🔗 REFERENCE CHAIN"
-                        )
-
-                        st.code(
-                            scene["reference_chain"],
-                            language="text"
-                        )
-
-
-                        # ---------------------------------------------
-                        # START FRAME
-                        # ---------------------------------------------
-
-                        st.markdown(
-                            "### 🟢 START FRAME — IMAGE PROMPT"
-                        )
-
-                        st.code(
-                            scene["start_frame_prompt"],
-                            language="text"
-                        )
-
-
-                        # ---------------------------------------------
-                        # END FRAME
-                        # ---------------------------------------------
-
-                        st.markdown(
-                            "### 🔴 END FRAME — IMAGE PROMPT"
-                        )
-
-                        st.code(
-                            scene["end_frame_prompt"],
-                            language="text"
-                        )
-
-
-                        # ---------------------------------------------
-                        # VIDEO
-                        # ---------------------------------------------
-
-                        st.markdown(
-                            "### 🎥 IMAGE-TO-VIDEO PROMPT"
-                        )
-
-                        st.code(
-                            scene["video_prompt"],
-                            language="text"
-                        )
-
-
-                        st.divider()
-
-
-                    # =================================================
-                    # FINAL SUMMARY
-                    # =================================================
-
-                    if len(scenes) == expected_clips:
-
-                        st.success(
-                            "🎉 Workflow complete! "
-                            f"{expected_clips} clips × 2 images = "
-                            f"{expected_images} images और "
-                            f"{expected_clips} Image-to-Video prompts "
-                            "Google Flow के लिए तैयार हैं। "
-                            "Reference Chain: "
-                            "Previous Actual Frame → Next Frame."
-                        )
+            display_final_scenes(
+                scene_output,
+                expected_clips,
+                expected_images
+            )
