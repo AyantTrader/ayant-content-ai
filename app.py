@@ -13,7 +13,7 @@ from datetime import datetime
 # =========================================================
 
 st.set_page_config(
-    page_title="AYANT Content AI",
+    page_title="AYANTVERSE.01 Content AI",
     page_icon="🎬",
     layout="wide"
 )
@@ -41,11 +41,11 @@ st.markdown(
         word-wrap: break-word;
     }
 
-    .reference-box {
-        padding: 12px;
-        border-radius: 10px;
+    .channel-box {
+        padding: 15px;
+        border-radius: 12px;
         border: 1px solid rgba(128,128,128,0.35);
-        margin-bottom: 12px;
+        margin-bottom: 15px;
     }
     </style>
     """,
@@ -58,11 +58,7 @@ st.markdown(
 # =========================================================
 
 WORKFLOW_DIR = "workflow_data"
-
-os.makedirs(
-    WORKFLOW_DIR,
-    exist_ok=True
-)
+os.makedirs(WORKFLOW_DIR, exist_ok=True)
 
 
 def get_workflow_id():
@@ -72,10 +68,7 @@ def get_workflow_id():
     if workflow_id:
         return workflow_id
 
-    workflow_id = str(
-        uuid.uuid4()
-    )
-
+    workflow_id = str(uuid.uuid4())
     st.query_params["workflow"] = workflow_id
 
     return workflow_id
@@ -95,17 +88,14 @@ def load_workflow():
         return {}
 
     try:
-
         with open(
             WORKFLOW_FILE,
             "r",
             encoding="utf-8"
         ) as f:
-
             return json.load(f)
 
     except Exception:
-
         return {}
 
 
@@ -115,10 +105,7 @@ def save_workflow(data):
 
         data["last_saved"] = datetime.now().isoformat()
 
-        temp_file = (
-            WORKFLOW_FILE
-            + ".tmp"
-        )
+        temp_file = WORKFLOW_FILE + ".tmp"
 
         with open(
             temp_file,
@@ -141,7 +128,6 @@ def save_workflow(data):
         return True
 
     except Exception:
-
         return False
 
 
@@ -150,13 +136,9 @@ def clear_current_workflow():
     try:
 
         if os.path.exists(WORKFLOW_FILE):
-
-            os.remove(
-                WORKFLOW_FILE
-            )
+            os.remove(WORKFLOW_FILE)
 
     except Exception:
-
         pass
 
 
@@ -167,35 +149,262 @@ workflow = load_workflow()
 # APP HEADER
 # =========================================================
 
-st.title("🎬 AYANT Content AI")
+st.title("🎬 AYANTVERSE.01 Content AI")
 
 st.caption(
     "Story → Master Reference → Continuity Chain → "
-    "Start/End Frames → Image Prompts → Image-to-Video Prompts → Google Flow"
+    "Start/End Frames → Image Prompts → "
+    "Image-to-Video Prompts → Google Flow"
 )
 
 st.divider()
 
 
 # =========================================================
+# PERMANENT AYANTVERSE.01 CHANNEL DIRECTION
+# =========================================================
+
+AYANTVERSE_01_DIRECTION = """
+=========================================================
+AYANTVERSE.01 — PERMANENT CHANNEL IDENTITY
+=========================================================
+
+This Content AI is created ONLY for the AYANTVERSE.01 channel.
+
+The AI must never generate content as if this were another
+channel or another creator.
+
+PRIMARY CONTENT PILLARS:
+
+1. WILDLIFE & ANIMAL MYSTERIES
+- strange animal behavior
+- unexplained wildlife facts
+- rare animals
+- extreme animal adaptations
+- deep-ocean creatures
+- animal survival mysteries
+- unusual natural phenomena
+
+2. EXTINCT ANIMALS & ANCIENT WORLD
+- extinct animals
+- prehistoric creatures
+- dinosaurs
+- ancient ecosystems
+- prehistoric Earth
+- ancient-world mysteries
+- mass extinction mysteries
+- ancient survival and exploration
+
+3. SPACE & WHAT IF
+- space mysteries
+- planets
+- moons
+- black holes
+- cosmic phenomena
+- scientific what-if scenarios
+- Earth-changing astronomical scenarios
+
+CHANNEL STYLE:
+
+Cinematic 3D animated mystery + facts + exploration.
+
+The content should feel:
+- cinematic
+- mysterious
+- curiosity-driven
+- educational
+- visually powerful
+- exploration-focused
+- factual where appropriate
+- emotionally engaging
+- suitable for AYANTVERSE.01
+
+DEFAULT STORY FLOW:
+
+STRONG HOOK
+→ MYSTERY
+→ EXPLORATION
+→ DISCOVERY
+→ REVEAL / PAYOFF
+
+The story must be ONE continuous cinematic journey.
+
+Do NOT create disconnected mini-stories.
+
+Do NOT randomly switch to unrelated subjects.
+
+Do NOT randomly change the main mystery.
+
+FACTUAL RULE:
+
+When the topic is based on real science, wildlife, extinct
+animals, ancient history or space:
+
+- do not present invented facts as confirmed facts
+- do not present speculation as established science
+- clearly treat WHAT-IF scenarios as hypothetical
+- maintain scientifically reasonable visual logic
+
+CONTINUITY:
+
+Every scene must naturally continue from the previous scene.
+
+Lock:
+- character identity
+- face
+- skin
+- age
+- body proportions
+- hairstyle
+- beard
+- moustache
+- clothing
+- shoes
+- accessories
+- location
+- environment
+- architecture
+- landscape
+- weather
+- time of day
+- lighting
+- important objects
+- object position
+- character position
+- body orientation
+- gaze
+- expression
+- hand placement
+- leg placement
+
+Only the explicitly required action may change.
+
+NEW STORY RULE:
+
+Every new story starts with a NEW continuity state.
+
+Characters and locations from previous stories must NOT
+automatically carry into a new story.
+
+Every recurring character created for the current story must
+be locked after first appearance.
+
+Every recurring location created for the current story must
+be locked after first appearance.
+
+AYANT:
+
+Ayant does NOT have to appear unless the story or user idea
+requires him.
+
+When Ayant appears, his permanent clothing lock MUST apply.
+
+NO RANDOM AI IMPROVISATION:
+
+Never add:
+- random characters
+- random animals
+- random objects
+- random locations
+- random buildings
+- random events
+- random dialogue
+- random camera movement
+- random weather
+- random lighting changes
+- random costume changes
+
+Everything visible must have a story reason.
+
+VISUAL TEXT:
+
+Generated images and videos must NOT contain:
+- subtitles
+- captions
+- random letters
+- random words
+- signs
+- labels
+- posters
+- banners
+- logos
+- watermarks
+- typography
+
+EXCEPTION:
+Ayant's explicitly required white "AYANT" clothing text.
+
+LANGUAGE:
+
+Story:
+STANDARD NATURAL HINDI IN DEVANAGARI.
+
+Image prompts:
+ENGLISH.
+
+Image-to-video prompts:
+ENGLISH.
+
+Dialogue:
+STANDARD NATURAL HINDI ONLY.
+
+CLIP SYSTEM:
+
+Every clip is EXACTLY 8 SECONDS.
+
+Every clip contains:
+START FRAME + END FRAME + IMAGE-TO-VIDEO
+
+REFERENCE CHAIN:
+
+MASTER REFERENCE
+→ CLIP 1 START
+→ CLIP 1 END
+→ CLIP 2 START
+→ CLIP 2 END
+→ CLIP 3 START
+→ CLIP 3 END
+→ continue until final clip.
+
+The actual previously generated frame is always the PRIMARY
+visual reference for the next frame.
+
+Never treat the next frame as an unrelated new generation.
+=========================================================
+"""
+
+
+# =========================================================
 # NEW STORY BUTTON
 # =========================================================
 
-if st.button(
-    "🆕 नई Story शुरू करो"
-):
+if st.button("🆕 नई Story शुरू करो"):
 
     clear_current_workflow()
 
-    new_workflow_id = str(
-        uuid.uuid4()
-    )
+    new_workflow_id = str(uuid.uuid4())
 
-    st.query_params["workflow"] = (
-        new_workflow_id
-    )
+    st.query_params["workflow"] = new_workflow_id
 
     st.rerun()
+
+
+# =========================================================
+# CHANNEL LOCK DISPLAY
+# =========================================================
+
+st.markdown(
+    """
+    <div class="channel-box">
+    <b>🔒 CHANNEL LOCKED: AYANTVERSE.01</b><br>
+    🐺 Wildlife & Animal Mysteries<br>
+    🦖 Extinct Animals & Ancient World<br>
+    🌌 Space & What If<br>
+    🎬 Cinematic 3D Mystery + Facts + Exploration
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # =========================================================
@@ -220,21 +429,17 @@ if workflow:
 # VIDEO INPUT
 # =========================================================
 
-st.subheader(
-    "📝 अपनी कहानी या वीडियो आइडिया लिखो"
-)
+st.subheader("📝 अपनी कहानी या वीडियो आइडिया लिखो")
 
-
-saved_idea = workflow.get(
-    "idea",
-    ""
-)
-
+saved_idea = workflow.get("idea", "")
 
 idea = st.text_area(
     "Video idea",
     value=saved_idea,
-    placeholder="उदाहरण: Ayant 5000 साल पीछे Dwapar Yuga में चला जाता है...",
+    placeholder=(
+        "उदाहरण: समुद्र की गहराई में एक ऐसा जीव मिला "
+        "जिसके बारे में वैज्ञानिक भी हैरान हैं..."
+    ),
     height=180
 )
 
@@ -261,15 +466,12 @@ with col1:
     )
 
     if saved_duration not in duration_options:
-
         saved_duration = duration_options[0]
 
     duration = st.selectbox(
         "वीडियो duration",
         duration_options,
-        index=duration_options.index(
-            saved_duration
-        )
+        index=duration_options.index(saved_duration)
     )
 
 
@@ -288,15 +490,12 @@ with col2:
     )
 
     if saved_style not in style_options:
-
         saved_style = style_options[0]
 
     style = st.selectbox(
         "Visual Style",
         style_options,
-        index=style_options.index(
-            saved_style
-        )
+        index=style_options.index(saved_style)
     )
 
 
@@ -314,15 +513,12 @@ with col3:
     )
 
     if saved_aspect not in aspect_options:
-
         saved_aspect = aspect_options[0]
 
     aspect_ratio = st.selectbox(
         "Format",
         aspect_options,
-        index=aspect_options.index(
-            saved_aspect
-        )
+        index=aspect_options.index(saved_aspect)
     )
 
 
@@ -354,13 +550,8 @@ DURATION_CONFIG = {
 }
 
 
-expected_clips = DURATION_CONFIG[
-    duration
-]["clips"]
-
-expected_images = DURATION_CONFIG[
-    duration
-]["images"]
+expected_clips = DURATION_CONFIG[duration]["clips"]
+expected_images = DURATION_CONFIG[duration]["images"]
 
 
 st.info(
@@ -374,23 +565,21 @@ st.info(
 # =========================================================
 
 FIXED_AYANT_CLOTHING = """
-AYANT CLOTHING IS PERMANENTLY LOCKED.
+AYANT CHARACTER CLOTHING IS PERMANENTLY LOCKED.
 
-Ayant must always wear exactly:
+Whenever Ayant appears, he must wear exactly:
 
 - black T-shirt
-- the word "AYANT" clearly written in white letters on the FRONT
-- the word "AYANT" clearly written in white letters on the BACK
+- white "AYANT" text clearly visible on the FRONT
+- white "AYANT" text clearly visible on the BACK
 - black pants
 - clean white shoes
-
-These details MUST remain identical in every scene and every frame.
 
 Do NOT change:
 - shirt color
 - shirt design
 - shirt text
-- pants color
+- pants
 - shoes
 - clothing style
 - wardrobe
@@ -409,18 +598,15 @@ No removed clothing.
 # CHARACTER LOCK INPUT
 # =========================================================
 
-st.subheader(
-    "🔒 Character Lock"
-)
-
+st.subheader("🔒 Character Lock")
 
 saved_character = workflow.get(
     "character",
     (
         "Ayant: young Indian male, wheatish skin, brown eyes, "
-        "short trimmed beard and moustache, black hair tied in a high "
-        "man-bun/top-knot, consistent face, body proportions and "
-        "appearance across all scenes."
+        "short trimmed beard and moustache, black hair tied in "
+        "a high man-bun/top-knot, consistent face, body "
+        "proportions and appearance across all scenes."
     )
 )
 
@@ -443,10 +629,9 @@ workflow["aspect_ratio"] = aspect_ratio
 workflow["character"] = character
 workflow["expected_clips"] = expected_clips
 workflow["expected_images"] = expected_images
+workflow["channel"] = "AYANTVERSE.01"
 
-save_workflow(
-    workflow
-)
+save_workflow(workflow)
 
 
 # =========================================================
@@ -467,9 +652,7 @@ st.info(
 
 def openrouter_request(prompt):
 
-    api_key = st.secrets.get(
-        "OPENROUTER_API_KEY"
-    )
+    api_key = st.secrets.get("OPENROUTER_API_KEY")
 
     if not api_key:
 
@@ -481,7 +664,6 @@ def openrouter_request(prompt):
     try:
 
         response = requests.post(
-
             "https://openrouter.ai/api/v1/chat/completions",
 
             headers={
@@ -491,20 +673,17 @@ def openrouter_request(prompt):
 
             json={
                 "model": "openrouter/free",
-
                 "messages": [
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
-
                 "temperature": 0.7,
             },
 
             timeout=120
         )
-
 
         if response.status_code != 200:
 
@@ -522,25 +701,16 @@ def openrouter_request(prompt):
 
                 error_message = response.text
 
-
             return (
                 None,
                 f"OpenRouter Error: {error_message}"
             )
 
-
         data = response.json()
 
-        result = data[
-            "choices"
-        ][0][
-            "message"
-        ][
-            "content"
-        ]
+        result = data["choices"][0]["message"]["content"]
 
         return result.strip(), None
-
 
     except requests.exceptions.Timeout:
 
@@ -548,7 +718,6 @@ def openrouter_request(prompt):
             None,
             "AI response में बहुत समय लग रहा है। फिर से try करो।"
         )
-
 
     except Exception as e:
 
@@ -572,12 +741,21 @@ def generate_ai_story(
 ):
 
     prompt = f"""
-You are AYANT Content AI, a professional cinematic Hindi story writer.
+You are AYANTVERSE.01 Content AI.
 
-USER VIDEO IDEA:
+{AYANTVERSE_01_DIRECTION}
+
+==================================================
+USER VIDEO IDEA
+==================================================
+
 {idea}
 
-VIDEO DURATION:
+==================================================
+VIDEO SETTINGS
+==================================================
+
+DURATION:
 {duration}
 
 EXACT CLIP COUNT:
@@ -592,54 +770,119 @@ FORMAT:
 CHARACTER:
 {character}
 
-PERMANENT AYANT CLOTHING:
+AYANT CLOTHING:
 {FIXED_AYANT_CLOTHING}
 
+==================================================
+STORY WRITING RULES
+==================================================
+
 Write ONE continuous cinematic Hindi story designed for EXACTLY
-{expected_clips} sequential 8-second clips.
+{expected_clips} sequential clips.
 
-IMPORTANT:
+The story must follow:
 
-1. Use clean, natural STANDARD HINDI.
-2. Use standard Unicode Devanagari only for Hindi.
-3. Never use Chinese, Japanese, Arabic, Persian or random Unicode.
-4. Dialogue, if required, must be natural spoken Hindi.
-5. Never randomly add dialogue.
-6. Never randomly change language.
-7. The story must be one continuous sequence.
-8. Every clip must naturally continue from the previous clip.
-9. Every scene must be physically possible as the next moment.
-10. Do not randomly change location.
-11. Do not randomly change weather.
-12. Do not randomly change time of day.
-13. Do not randomly change clothing.
-14. Do not randomly change objects.
-15. Avoid unnecessary characters.
-16. Avoid unnecessary locations.
-17. Every clip must contain a simple action that can happen within 8 seconds.
-18. Do not describe image prompts.
-19. Do not describe video prompts.
-20. Do not add production instructions.
+STRONG HOOK
+→ MYSTERY
+→ EXPLORATION
+→ DISCOVERY
+→ REVEAL / PAYOFF
 
-VISUAL TEXT RULE:
+The opening must create immediate curiosity.
 
-Generated visuals must contain NO written text unless explicitly
-requested by the story.
+Every clip must naturally continue from the exact previous
+moment.
+
+Every clip must contain a simple visual action that can happen
+within 8 seconds.
+
+If a new character is required, create that character from the
+current story and then keep the character visually locked.
+
+If a new location is required, establish it clearly and then
+keep it visually locked until the story explicitly moves.
+
+Do NOT randomly add characters.
+
+Do NOT randomly add locations.
+
+Do NOT randomly add objects.
+
+Do NOT randomly change the environment.
+
+Do NOT randomly change weather.
+
+Do NOT randomly change time of day.
+
+Do NOT randomly change clothing.
+
+Do NOT randomly add dialogue.
+
+Do NOT describe image prompts.
+
+Do NOT describe video prompts.
+
+Do NOT add production instructions.
+
+==================================================
+HINDI LANGUAGE RULE
+==================================================
+
+Use clean, natural STANDARD HINDI.
+
+Use standard Unicode Devanagari only.
+
+Never use:
+- Chinese
+- Japanese
+- Arabic
+- Persian
+- random Unicode
+- gibberish
+
+Dialogue, if required, must be natural spoken Hindi.
+
+==================================================
+VISUAL TEXT RULE
+==================================================
+
+Generated visuals must contain NO written text.
+
+Do not add:
+- subtitles
+- captions
+- labels
+- signs
+- posters
+- banners
+- logos
+- watermarks
+- random letters
+- random words
+- typography
 
 EXCEPTION:
 
-Ayant's white "AYANT" clothing text is explicitly required.
+Ayant's explicitly required white "AYANT" clothing text.
+
+==================================================
+FINAL OUTPUT
+==================================================
 
 Return ONLY the final Hindi story.
+
+Do not return explanations.
+
+Do not return scene headings.
+
+Do not return prompts.
 """
 
-    return openrouter_request(
-        prompt
-    )
+    return openrouter_request(prompt)
 
 
 # =========================================================
-# MASTER CONTINUITY + ACTUAL REFERENCE CHAIN PLAN
+# MASTER CONTINUITY + REFERENCE CHAIN
 # =========================================================
 
 def generate_continuity_and_scenes(
@@ -652,17 +895,9 @@ def generate_continuity_and_scenes(
 ):
 
     prompt = f"""
-You are AYANT Content AI's STRICT CONTINUITY ARCHITECT.
+You are AYANTVERSE.01 Content AI's STRICT CONTINUITY ARCHITECT.
 
-Your job is to create a MASTER CONTINUITY BIBLE and a REAL
-REFERENCE-CHAIN PLAN.
-
-The most important rule:
-
-A later frame must NOT be treated as an independent image.
-
-Every frame must inherit its visual identity from the actual
-previous generated frame.
+{AYANTVERSE_01_DIRECTION}
 
 ==================================================
 STORY
@@ -699,35 +934,37 @@ AYANT CLOTHING:
 MASTER REFERENCE
 ==================================================
 
-Before Clip 1, establish ONE MASTER REFERENCE IMAGE.
+Before Clip 1 establish ONE MASTER REFERENCE IMAGE.
 
-The Master Reference defines:
+The Master Reference must define the visual identity of the
+current story.
 
-- Ayant's exact face
-- skin tone
-- body proportions
-- hairstyle
+Lock:
+- character identity
+- face
+- skin
+- age
+- body
+- hair
 - beard
 - moustache
 - clothing
 - shoes
 - accessories
 - primary location
-- background
 - environment
+- background
 - lighting
 - visual style
 - important objects
 
-The Master Reference is the permanent visual identity source.
-
-Do NOT redesign these elements later.
+Do NOT import characters or locations from previous stories.
 
 ==================================================
 CHARACTER BIBLE
 ==================================================
 
-For every recurring character lock:
+For every recurring character in THIS STORY define:
 
 - face
 - facial features
@@ -743,34 +980,28 @@ For every recurring character lock:
 - beard
 - moustache
 - clothing
-- clothing color
+- clothing colors
 - clothing design
 - shoes
 - accessories
 
-Once established, NEVER redesign them.
+Once defined, NEVER redesign the character.
 
 ==================================================
 AYANT LOCK
 ==================================================
 
-Ayant MUST remain:
+Whenever Ayant appears:
 
 {character}
 
-AND:
-
 {FIXED_AYANT_CLOTHING}
-
-No variation.
 
 ==================================================
 LOCATION BIBLE
 ==================================================
 
-For every location establish a canonical physical environment.
-
-Lock:
+For every recurring location define exact physical details:
 
 - architecture
 - walls
@@ -782,8 +1013,8 @@ Lock:
 - plants
 - buildings
 - mountains
-- furniture
 - landscape
+- furniture
 - horizon
 - foreground
 - background
@@ -794,18 +1025,15 @@ Lock:
 - lighting direction
 - shadows
 
-Do not summarize this as "same background".
+Do NOT simply say "same background".
 
-Give exact visual details.
-
-A location may change ONLY when the story explicitly moves
-to another location.
+A location can change ONLY when the story explicitly moves.
 
 ==================================================
 OBJECT BIBLE
 ==================================================
 
-For every important object lock:
+For every important object define:
 
 - type
 - shape
@@ -818,19 +1046,11 @@ For every important object lock:
 - hand
 - exact position
 
-Never replace an established object with another object.
-
-Never randomly remove an object.
-
-Never invent another copy.
+Never randomly replace, remove or duplicate an object.
 
 ==================================================
 REAL FRAME CHAIN
 ==================================================
-
-This is the most important system.
-
-Create this exact dependency:
 
 MASTER_REFERENCE
 ↓
@@ -856,15 +1076,15 @@ End Frame as its PRIMARY visual reference.
 Clip N End Frame MUST use the ACTUAL generated Clip N Start
 Frame as its PRIMARY visual reference.
 
-Only the explicitly required action may change.
+Only the explicitly required action/state may change.
 
-Everything else remains visually inherited.
+Everything else must remain visually inherited.
 
 ==================================================
 POSE / STATE TRANSFER
 ==================================================
 
-The End State of each frame must define:
+For every scene define:
 
 - exact character position
 - body orientation
@@ -889,11 +1109,11 @@ NO RANDOM CHANGES
 Never add:
 
 - new characters
+- new animals
 - new objects
 - new locations
 - new buildings
 - new trees
-- new animals
 - new events
 - random actions
 - random dialogue
@@ -934,7 +1154,7 @@ If dialogue exists:
 - no other language
 - no gibberish
 
-If there is no dialogue:
+If no dialogue:
 
 DIALOGUE = NONE
 
@@ -976,7 +1196,7 @@ Exactly {expected_clips}
 CLIP DURATION:
 Exactly 8 seconds
 
-THEN FOR EACH SCENE:
+THEN:
 
 ### SCENE 1
 
@@ -1010,27 +1230,20 @@ DIALOGUE:
 CONTINUITY_RULE:
 ...
 
-### SCENE 2
+Then continue with:
 
+### SCENE 2
 REFERENCE_SOURCE:
 CLIP_1_END_FRAME
 
-START_STATE:
-...
-
-END_STATE:
 ...
 
 Continue until EXACTLY {expected_clips} scenes.
 
-For every scene explicitly state its reference source.
-
 NO EXTRA SCENES.
 """
 
-    return openrouter_request(
-        prompt
-    )
+    return openrouter_request(prompt)
 
 
 # =========================================================
@@ -1048,16 +1261,12 @@ def generate_copyable_scene_prompts(
 ):
 
     prompt = f"""
-You are AYANT Content AI's FINAL GOOGLE FLOW CONTINUITY
-PROMPT DIRECTOR.
+You are AYANTVERSE.01 Content AI's FINAL GOOGLE FLOW
+CONTINUITY PROMPT DIRECTOR.
+
+{AYANTVERSE_01_DIRECTION}
 
 Your output will be manually used in Google Flow.
-
-The critical objective is NOT merely to describe continuity.
-
-The objective is to force a HUMAN OPERATOR + IMAGE GENERATOR
-workflow where every next image uses the PREVIOUS ACTUAL IMAGE
-as its visual reference.
 
 ==================================================
 STORY
@@ -1103,19 +1312,21 @@ EXACTLY 8 SECONDS
 ABSOLUTE REFERENCE RULE
 ==================================================
 
-NEVER describe a later frame as a completely new generation.
+NEVER describe a later frame as a completely new independent
+generation.
 
 The actual previous generated frame is the PRIMARY visual
 reference.
 
-The text prompt describes ONLY what must remain identical and
-what small action/state change must happen.
+The prompt must preserve everything from that reference.
+
+Only the explicitly required next action/state may change.
 
 ==================================================
 REFERENCE CHAIN
 ==================================================
 
-For Scene 1:
+Scene 1:
 
 START FRAME REFERENCE:
 MASTER REFERENCE IMAGE
@@ -1123,7 +1334,7 @@ MASTER REFERENCE IMAGE
 END FRAME REFERENCE:
 ACTUAL SCENE 1 START FRAME
 
-For Scene 2:
+Scene 2:
 
 START FRAME REFERENCE:
 ACTUAL SCENE 1 END FRAME
@@ -1131,7 +1342,7 @@ ACTUAL SCENE 1 END FRAME
 END FRAME REFERENCE:
 ACTUAL SCENE 2 START FRAME
 
-For Scene 3:
+Scene 3:
 
 START FRAME REFERENCE:
 ACTUAL SCENE 2 END FRAME
@@ -1139,25 +1350,33 @@ ACTUAL SCENE 2 END FRAME
 END FRAME REFERENCE:
 ACTUAL SCENE 3 START FRAME
 
-Continue exactly like this.
-
-This reference chain MUST be explicitly written inside every
-prompt.
+Continue this exact pattern until the final scene.
 
 ==================================================
 REFERENCE IMAGE INSTRUCTION
 ==================================================
 
-Every image prompt MUST begin with a clear instruction such as:
+Every image prompt MUST clearly state:
 
-"REFERENCE IMAGE: Use the specified previous generated frame
-as the PRIMARY visual reference. Preserve the exact identity,
-geometry, appearance, environment, object placement, lighting,
-camera perspective and composition from that reference."
+REFERENCE IMAGE:
+Use the specified previous generated frame as the PRIMARY
+visual reference.
 
-Then specify ONLY the required change.
+Preserve:
+- exact character identity
+- exact face
+- exact body
+- exact clothing
+- exact location
+- exact environment
+- exact object placement
+- exact lighting
+- exact camera perspective
+- exact composition
 
-Never ask the image model to redesign the scene.
+Then describe ONLY the required change.
+
+Never redesign the scene.
 
 ==================================================
 CHARACTER LOCK
@@ -1174,7 +1393,7 @@ Preserve exactly:
 - age
 - body proportions
 - height
-- clothes
+- clothing
 - shoes
 - accessories
 
@@ -1206,7 +1425,7 @@ No variation.
 LOCATION LOCK
 ==================================================
 
-Preserve the exact physical environment from the reference:
+Preserve the exact physical environment:
 
 - architecture
 - walls
@@ -1232,7 +1451,7 @@ Do NOT create a new interpretation of the location.
 OBJECT LOCK
 ==================================================
 
-Preserve every important object exactly:
+Preserve every important object:
 
 - same object
 - same material
@@ -1244,7 +1463,7 @@ Preserve every important object exactly:
 - same hand
 - same position
 
-Only explicitly required object movement is allowed.
+Only explicitly required movement is allowed.
 
 ==================================================
 POSE LOCK
@@ -1261,7 +1480,7 @@ Carry forward:
 - leg positions
 - object positions
 
-Only the current scene's explicitly required action can change.
+Only the current scene's explicitly required action may change.
 
 ==================================================
 NO VISUAL TEXT
@@ -1292,9 +1511,9 @@ NO AI IMPROVISATION
 Do NOT add:
 
 - characters
+- animals
 - objects
 - locations
-- animals
 - buildings
 - trees
 - events
@@ -1302,31 +1521,30 @@ Do NOT add:
 - dialogue
 - camera movements
 
-unless explicitly required.
+unless explicitly required by the current story state.
 
 ==================================================
 START FRAME
 ==================================================
 
-The Start Frame is NOT a fresh scene.
+The Start Frame is NOT a fresh unrelated scene.
 
-It MUST use the specified reference image.
+It MUST use the specified actual reference image.
 
-The prompt must say:
-
+State:
 1. Which actual image is the reference.
-2. What must remain identical.
-3. What exact state is required.
-4. What tiny change, if any, is required.
+2. What remains identical.
+3. Exact required state.
+4. Exact required action/state change.
 
 ==================================================
 END FRAME
 ==================================================
 
-The End Frame MUST use the actual Start Frame as its reference.
+The End Frame MUST use the actual Start Frame as its
+PRIMARY reference.
 
-It represents the exact next visual state after the defined
-8-second action.
+It represents the exact next visual state after the action.
 
 Do not redesign anything.
 
@@ -1334,32 +1552,34 @@ Do not redesign anything.
 IMAGE TO VIDEO
 ==================================================
 
-The video uses:
-
 START FRAME = actual generated Start Frame
+
 END FRAME = actual generated End Frame
 
-Animate ONLY the transition between them.
+Animate ONLY the transition between these two frames.
 
-Do NOT regenerate the character.
-Do NOT redesign the environment.
-Do NOT change clothing.
-Do NOT change objects.
-Do NOT add characters.
-Do NOT add objects.
-Do NOT add events.
-Do NOT add random camera movements.
+Do NOT:
+- regenerate the character
+- redesign the environment
+- change clothing
+- change objects
+- add characters
+- add objects
+- add events
+- add random camera movements
 
 Duration: exactly 8 seconds.
 
 If dialogue exists:
 
-"Any spoken dialogue must be natural standard Hindi only,
-with accurate Hindi pronunciation. No other language and no
-gibberish speech."
+Any spoken dialogue must be natural standard Hindi only,
+with accurate Hindi pronunciation.
+
+No other language.
+No gibberish speech.
 
 ==================================================
-EXACT OUTPUT FORMAT
+OUTPUT FORMAT
 ==================================================
 
 SCENE_START
@@ -1389,9 +1609,8 @@ Continue exactly until Scene {expected_clips}.
 NO EXTRA EXPLANATION.
 """
 
-    return openrouter_request(
-        prompt
-    )
+
+    return openrouter_request(prompt)
 
 
 # =========================================================
@@ -1475,18 +1694,14 @@ def parse_scenes(text):
 
 
 # =========================================================
-# DISPLAY SAVED STORY
+# DISPLAY STORY
 # =========================================================
 
 def display_story(story):
 
-    st.markdown(
-        "## 📖 AI GENERATED STORY"
-    )
+    st.markdown("## 📖 AI GENERATED STORY")
 
-    safe_story = html.escape(
-        story
-    ).replace(
+    safe_story = html.escape(story).replace(
         "\n",
         "<br>"
     )
@@ -1505,17 +1720,13 @@ def display_story(story):
 # DISPLAY CONTINUITY
 # =========================================================
 
-def display_continuity(
-    continuity_output
-):
+def display_continuity(continuity_output):
 
     st.markdown(
         "## 🔒 MASTER CONTINUITY + REFERENCE CHAIN"
     )
 
-    st.write(
-        continuity_output
-    )
+    st.write(continuity_output)
 
 
 # =========================================================
@@ -1528,20 +1739,17 @@ def display_final_scenes(
     expected_images
 ):
 
-    scenes = parse_scenes(
-        scene_output
-    )
+    scenes = parse_scenes(scene_output)
 
     st.markdown(
         "## 🎬 GOOGLE FLOW — REAL REFERENCE CHAIN"
     )
 
     st.warning(
-        "⚠️ IMPORTANT: अब हर अगली image को नई independent "
-        "image की तरह generate मत करना। जिस frame को "
-        "REFERENCE IMAGE लिखा है, उसी actual generated "
-        "image को Google Flow में reference के रूप में "
-        "देना है। यही visual continuity का मुख्य हिस्सा है।"
+        "⚠️ IMPORTANT: हर अगली image को independent नई image "
+        "की तरह generate मत करना। जिस actual frame को "
+        "REFERENCE IMAGE लिखा है, उसी generated frame को "
+        "Google Flow में reference के रूप में इस्तेमाल करना है।"
     )
 
     st.markdown(
@@ -1550,8 +1758,8 @@ def display_final_scenes(
 
     st.write(
         "सबसे पहले Master Reference Image generate करो। "
-        "यही Ayant + location + objects की visual identity "
-        "का base होगा।"
+        "यही current story के character + location + objects "
+        "की permanent visual identity का base होगा।"
     )
 
     st.info(
@@ -1564,7 +1772,7 @@ def display_final_scenes(
         st.warning(
             f"⚠️ AI ने {expected_clips} scenes की जगह "
             f"{len(scenes)} scenes read किए। "
-            f"Workflow को दोबारा START करना बेहतर रहेगा।"
+            "Workflow को दोबारा START करना बेहतर रहेगा।"
         )
 
         return
@@ -1587,9 +1795,7 @@ def display_final_scenes(
             "Actual Reference → Start Frame → End Frame → Video"
         )
 
-        st.markdown(
-            "### 🔗 REFERENCE CHAIN"
-        )
+        st.markdown("### 🔗 REFERENCE CHAIN")
 
         st.code(
             scene["reference_chain"],
@@ -1630,9 +1836,7 @@ def display_final_scenes(
         f"{expected_clips} clips × 2 images = "
         f"{expected_images} images और "
         f"{expected_clips} Image-to-Video prompts "
-        "Google Flow के लिए तैयार हैं। "
-        "Reference Chain: "
-        "Previous Actual Frame → Next Frame."
+        "Google Flow के लिए तैयार हैं।"
     )
 
 
@@ -1640,17 +1844,9 @@ def display_final_scenes(
 # RESTORE COMPLETED WORKFLOW
 # =========================================================
 
-if workflow.get(
-    "workflow_started"
-):
+if workflow.get("workflow_started"):
 
-    # -----------------------------------------------------
-    # RESTORE STORY
-    # -----------------------------------------------------
-
-    if workflow.get(
-        "story_complete"
-    ):
+    if workflow.get("story_complete"):
 
         generated_story = workflow.get(
             "generated_story",
@@ -1658,19 +1854,9 @@ if workflow.get(
         )
 
         if generated_story:
+            display_story(generated_story)
 
-            display_story(
-                generated_story
-            )
-
-
-    # -----------------------------------------------------
-    # RESTORE CONTINUITY
-    # -----------------------------------------------------
-
-    if workflow.get(
-        "continuity_complete"
-    ):
+    if workflow.get("continuity_complete"):
 
         continuity_output = workflow.get(
             "continuity_output",
@@ -1678,19 +1864,9 @@ if workflow.get(
         )
 
         if continuity_output:
+            display_continuity(continuity_output)
 
-            display_continuity(
-                continuity_output
-            )
-
-
-    # -----------------------------------------------------
-    # RESTORE FINAL PROMPTS
-    # -----------------------------------------------------
-
-    if workflow.get(
-        "prompts_complete"
-    ):
+    if workflow.get("prompts_complete"):
 
         scene_output = workflow.get(
             "scene_output",
@@ -1698,7 +1874,6 @@ if workflow.get(
         )
 
         if scene_output:
-
             display_final_scenes(
                 scene_output,
                 expected_clips,
@@ -1723,12 +1898,8 @@ if st.button(
 
     else:
 
-        # =================================================
-        # SAVE WORKFLOW START
-        # =================================================
-
         workflow["workflow_started"] = True
-
+        workflow["channel"] = "AYANTVERSE.01"
         workflow["idea"] = idea
         workflow["duration"] = duration
         workflow["style"] = style
@@ -1737,137 +1908,84 @@ if st.button(
         workflow["expected_clips"] = expected_clips
         workflow["expected_images"] = expected_images
 
-        save_workflow(
-            workflow
-        )
-
+        save_workflow(workflow)
 
         st.success(
-            "Content workflow शुरू हो गया!"
+            "AYANTVERSE.01 Content Workflow शुरू हो गया!"
         )
-
 
         # =================================================
         # VIDEO PLAN
         # =================================================
 
-        st.markdown(
-            "## 🎬 VIDEO PLAN"
-        )
+        st.markdown("## 🎬 VIDEO PLAN")
 
-        st.write(
-            f"**Selected Duration:** {duration}"
-        )
-
-        st.write(
-            f"**Clips:** {expected_clips}"
-        )
-
-        st.write(
-            f"**Images:** {expected_images}"
-        )
-
-        st.write(
-            "**Images per Clip:** 2 "
-            "(Start Frame + End Frame)"
-        )
-
-        st.write(
-            "**Clip Duration:** EXACTLY 8 SECONDS"
-        )
-
+        st.write(f"**Channel:** AYANTVERSE.01")
+        st.write(f"**Selected Duration:** {duration}")
+        st.write(f"**Clips:** {expected_clips}")
+        st.write(f"**Images:** {expected_images}")
+        st.write("**Images per Clip:** 2 (Start + End)")
+        st.write("**Clip Duration:** EXACTLY 8 SECONDS")
         st.write(
             "**Continuity:** Actual Previous Frame → Next Frame"
         )
-
-        st.write(
-            f"**Style:** {style}"
-        )
-
-        st.write(
-            f"**Format:** {aspect_ratio}"
-        )
-
+        st.write(f"**Style:** {style}")
+        st.write(f"**Format:** {aspect_ratio}")
 
         # =================================================
         # STORY
         # =================================================
 
-        if workflow.get(
-            "story_complete"
-        ) and workflow.get(
-            "generated_story"
+        if (
+            workflow.get("story_complete")
+            and workflow.get("generated_story")
         ):
 
-            generated_story = workflow[
-                "generated_story"
-            ]
+            generated_story = workflow["generated_story"]
 
             st.info(
                 "📦 Saved Story already available — "
                 "AI को दोबारा Story generate नहीं करवाई जा रही।"
             )
 
-            display_story(
-                generated_story
-            )
+            display_story(generated_story)
 
         else:
 
             with st.spinner(
-                "🤖 AI तुम्हारी continuous Hindi story लिख रहा है..."
+                "🤖 AYANTVERSE.01 के लिए continuous Hindi story लिखी जा रही है..."
             ):
 
-                generated_story, story_error = (
-                    generate_ai_story(
-                        idea,
-                        duration,
-                        style,
-                        aspect_ratio,
-                        character,
-                        expected_clips
-                    )
+                generated_story, story_error = generate_ai_story(
+                    idea,
+                    duration,
+                    style,
+                    aspect_ratio,
+                    character,
+                    expected_clips
                 )
-
 
             if story_error:
 
-                st.error(
-                    story_error
-                )
-
+                st.error(story_error)
                 st.stop()
 
+            workflow["generated_story"] = generated_story
+            workflow["story_complete"] = True
 
-            workflow[
-                "generated_story"
-            ] = generated_story
+            save_workflow(workflow)
 
-            workflow[
-                "story_complete"
-            ] = True
+            st.success("💾 Story successfully saved.")
 
-            save_workflow(
-                workflow
-            )
-
-            st.success(
-                "💾 Story successfully saved."
-            )
-
-            display_story(
-                generated_story
-            )
-
+            display_story(generated_story)
 
         # =================================================
         # MASTER CONTINUITY
         # =================================================
 
-        if workflow.get(
-            "continuity_complete"
-        ) and workflow.get(
-            "continuity_output"
+        if (
+            workflow.get("continuity_complete")
+            and workflow.get("continuity_output")
         ):
 
             continuity_output = workflow[
@@ -1879,15 +1997,13 @@ if st.button(
                 "AI को दोबारा generate नहीं करवाया जा रहा।"
             )
 
-            display_continuity(
-                continuity_output
-            )
+            display_continuity(continuity_output)
 
         else:
 
             with st.spinner(
-                "🔒 Master Reference + Character + Location + "
-                "Object + State Chain तैयार हो रही है..."
+                "🔒 AYANTVERSE.01 Master Character + Location + "
+                "Object + State Continuity तैयार हो रही है..."
             ):
 
                 continuity_output, continuity_error = (
@@ -1901,50 +2017,32 @@ if st.button(
                     )
                 )
 
-
             if continuity_error:
 
-                st.error(
-                    continuity_error
-                )
-
+                st.error(continuity_error)
                 st.stop()
 
+            workflow["continuity_output"] = continuity_output
+            workflow["continuity_complete"] = True
 
-            workflow[
-                "continuity_output"
-            ] = continuity_output
-
-            workflow[
-                "continuity_complete"
-            ] = True
-
-            save_workflow(
-                workflow
-            )
+            save_workflow(workflow)
 
             st.success(
                 "💾 Master Continuity successfully saved."
             )
 
-            display_continuity(
-                continuity_output
-            )
-
+            display_continuity(continuity_output)
 
         # =================================================
         # FINAL PROMPTS
         # =================================================
 
-        if workflow.get(
-            "prompts_complete"
-        ) and workflow.get(
-            "scene_output"
+        if (
+            workflow.get("prompts_complete")
+            and workflow.get("scene_output")
         ):
 
-            scene_output = workflow[
-                "scene_output"
-            ]
+            scene_output = workflow["scene_output"]
 
             st.info(
                 "📦 Saved Google Flow prompts already available — "
@@ -1960,7 +2058,7 @@ if st.button(
         else:
 
             with st.spinner(
-                "🎨 Actual Reference Chain आधारित Google Flow "
+                "🎨 AYANTVERSE.01 Google Flow Reference Chain "
                 "prompts बनाए जा रहे हैं..."
             ):
 
@@ -1976,37 +2074,20 @@ if st.button(
                     )
                 )
 
-
             if scene_error:
 
-                st.error(
-                    scene_error
-                )
-
+                st.error(scene_error)
                 st.stop()
 
+            workflow["scene_output"] = scene_output
+            workflow["prompts_complete"] = True
 
-            workflow[
-                "scene_output"
-            ] = scene_output
-
-            workflow[
-                "prompts_complete"
-            ] = True
-
-            scenes = parse_scenes(
-                scene_output
-            )
+            scenes = parse_scenes(scene_output)
 
             if len(scenes) == expected_clips:
+                workflow["workflow_complete"] = True
 
-                workflow[
-                    "workflow_complete"
-                ] = True
-
-            save_workflow(
-                workflow
-            )
+            save_workflow(workflow)
 
             st.success(
                 "💾 Final Google Flow prompts successfully saved."
